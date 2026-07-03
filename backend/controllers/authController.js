@@ -8,12 +8,7 @@ const {
   generateRefreshToken,
 } = require("../utils/generateTokens");
 
-/* -----------------------------------------------------------
- * 1. REGISTER
- * - Creates the user (unverified)
- * - Sends an OTP to their email
- * - OTP is stored in Redis for 5 minutes only
- * --------------------------------------------------------- */
+
 const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -150,7 +145,6 @@ const login = async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    // password has `select: false` in the model, so we explicitly ask for it
     const user = await User.findOne({ email }).select("+password");
 
     if (!user) {

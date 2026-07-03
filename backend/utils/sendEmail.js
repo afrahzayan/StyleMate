@@ -1,7 +1,6 @@
 const nodemailer = require("nodemailer");
 
-// Using Gmail here. Go to Google Account -> Security -> App Passwords
-// to generate EMAIL_PASS (do NOT use your normal Gmail password).
+
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {

@@ -33,9 +33,7 @@ const userSchema = new Schema(
     status: { type: String, enum: ["active", "blocked"], default: "active" },
     isVerified: { type: Boolean, default: false }, // becomes true after OTP verification
 
-    // ---- Subscription / Plan ----
-    plan: { type: String, enum: ["free", "premium"], default: "free" },
-    premiumExpiresAt: { type: Date, default: null },
+   
 
     signatureColor: { type: String, default: "" },
     lastLoginAt: { type: Date },

@@ -1,7 +1,6 @@
 const jwt = require("jsonwebtoken");
 
-// Use this on any route that should only work for logged-in users.
-// In Postman, send: Authorization: Bearer <accessToken>
+
 const protect = (req, res, next) => {
   const authHeader = req.headers.authorization;
 
@@ -13,7 +12,7 @@ const protect = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-    req.userId = decoded.id; // now available in any controller after this middleware
+    req.userId = decoded.id; 
     next();
   } catch (err) {
     return res.status(401).json({ message: "Invalid or expired token" });
