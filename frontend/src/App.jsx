@@ -12,6 +12,11 @@ import VerifyOtpPage from "./features/auth/pages/verifyOtpPage";
 // ── Dashboard ────────────────────────────────────────────
 import DashboardPage from "./features/user/pages/dashboardPage";
 
+// ── Wardrobe ─────────────────────────────────────────────
+import WardrobePage    from "./features/user/pages/wardrobePage";
+import AddClothPage    from "./features/user/pages/addClothPage";
+import ClothDetailPage from "./features/user/pages/clothDetailsPage";
+
 // ── Route Guards ───────────────────────────────────────────
 
 // Stops logged-in users from going back to /login, /signup, /verify-otp
@@ -65,6 +70,30 @@ const App = () => {
         element={
           <PrivateRoute>
             <DashboardPage />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/wardrobe"
+        element={
+          <PrivateRoute>
+            <WardrobePage />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/wardrobe/add"
+        element={
+          <PrivateRoute>
+            <AddClothPage />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/wardrobe/:id"
+        element={
+          <PrivateRoute>
+            <ClothDetailPage />
           </PrivateRoute>
         }
       />

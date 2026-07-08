@@ -4,11 +4,14 @@ const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const morgan = require("morgan");
+const multer = require("multer");
 
 const connectDB = require("./config/db");
-require("./config/redis"); 
+require("./config/redis");
 
 const authRoutes = require("./routes/authRoutes");
+const userRoute = require("./routes/userRoute");
+const clothRoutes = require("./routes/clothRoutes");
 
 const app = express();
 
@@ -18,7 +21,7 @@ app.use(cookieParser());
 app.use(morgan("dev"));
 app.use(
   cors({
-    origin: "http://localhost:5173", 
+    origin: "http://localhost:5173",
     credentials: true, // allows cookies to be sent
   })
 );
@@ -26,11 +29,29 @@ app.use(
 // DB connection
 connectDB();
 
-// Routes 
+// Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/user", userRoute);
+app.use("/api/cloths", clothRoutes);
 
 app.get("/", (req, res) => {
   res.send("StyleMate API is running");
+});
+
+// ---- Multer error handler ----
+// Catches file-too-large / wrong-mimetype errors thrown by upload.js and
+// returns a clean JSON response instead of Express's default HTML error page.
+app.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    if (err.code === "LIMIT_FILE_SIZE") {
+      return res.status(400).json({ message: "Image must be smaller than 5MB" });
+    }
+    return res.status(400).json({ message: err.message });
+  }
+  if (err && err.message && err.message.includes("Only JPG, PNG")) {
+    return res.status(400).json({ message: err.message });
+  }
+  next(err);
 });
 
 app.listen(process.env.PORT, () => {
