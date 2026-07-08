@@ -2,6 +2,7 @@ import { useDispatch, useSelector } from "react-redux";
 import axiosInstance from "../../../shared/api/axiosInstance";
 import {
   setLoading,
+  stopLoading,
   loginSuccess,
   setError,
   logoutSuccess,
@@ -12,7 +13,10 @@ const useAuth = () => {
   const { user, isLoading, error } = useSelector((state) => state.auth);
 
   // ── REGISTER ──────────────────────────────────────────────
-  // Returns { success: true } if API accepted the request and OTP was sent
+  // Returns { success: true } if API accepted the request and OTP was sent.
+  // NOTE: this does NOT log the user in (no user/token yet), so we must
+  // explicitly reset isLoading here — loginSuccess() is what normally does
+  // that, but it isn't called on this path.
   const register = async (name, email, password) => {
     dispatch(setLoading());
     try {
@@ -21,6 +25,7 @@ const useAuth = () => {
         email,
         password,
       });
+      dispatch(stopLoading());
       return { success: true, message: res.data.message };
     } catch (err) {
       const msg = err.response?.data?.message || "Registration failed";

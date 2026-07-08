@@ -21,6 +21,14 @@ const authSlice = createSlice({
       state.error = null;
     },
 
+    // Called when a request finishes successfully but doesn't log the user in
+    // (e.g. register() — OTP was sent, but there's no user/token yet).
+    // Without this, isLoading stays stuck at `true` from setLoading() and
+    // carries over into whatever page the user is navigated to next.
+    stopLoading(state) {
+      state.isLoading = false;
+    },
+
     // Called when login or verify-OTP succeeds
     loginSuccess(state, action) {
       state.isLoading = false;
@@ -50,7 +58,13 @@ const authSlice = createSlice({
   },
 });
 
-export const { setLoading, loginSuccess, setError, logoutSuccess, clearError } =
-  authSlice.actions;
+export const {
+  setLoading,
+  stopLoading,
+  loginSuccess,
+  setError,
+  logoutSuccess,
+  clearError,
+} = authSlice.actions;
 
 export default authSlice.reducer;

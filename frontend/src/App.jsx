@@ -5,26 +5,16 @@ import { useSelector } from "react-redux";
 import LandingPage from "./features/marketing/pages/landingPage";
 
 // ── Auth ──────────────────────────────────────────────────
-import LoginPage  from "./features/auth/pages/loginPage";
-import SignupPage from "./features/auth/pages/signupPage";
+import LoginPage     from "./features/auth/pages/loginPage";
+import SignupPage    from "./features/auth/pages/signupPage";
+import VerifyOtpPage from "./features/auth/pages/verifyOtpPage";
 
-// ── Placeholder until you build the real dashboard ────────
-const Dashboard = () => (
-  <div
-    className="flex flex-col items-center justify-center h-screen gap-4"
-    style={{ backgroundColor: "#faf8f5" }}
-  >
-    <span className="text-6xl">🎉</span>
-    <h1 className="text-3xl font-extrabold" style={{ color: "#4a5280" }}>
-      Welcome to StyleMate!
-    </h1>
-    <p className="text-gray-500 text-sm">Your dashboard is coming soon.</p>
-  </div>
-);
+// ── Dashboard ────────────────────────────────────────────
+import DashboardPage from "./features/user/pages/dashboardPage";
 
 // ── Route Guards ───────────────────────────────────────────
 
-// Stops logged-in users from going back to /login or /signup
+// Stops logged-in users from going back to /login, /signup, /verify-otp
 const PublicRoute = ({ children }) => {
   const { user } = useSelector((state) => state.auth);
   return user ? <Navigate to="/dashboard" replace /> : children;
@@ -60,13 +50,21 @@ const App = () => {
           </PublicRoute>
         }
       />
+      <Route
+        path="/verify-otp"
+        element={
+          <PublicRoute>
+            <VerifyOtpPage />
+          </PublicRoute>
+        }
+      />
 
       {/* Private — protected user area */}
       <Route
         path="/dashboard"
         element={
           <PrivateRoute>
-            <Dashboard />
+            <DashboardPage />
           </PrivateRoute>
         }
       />
