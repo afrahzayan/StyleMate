@@ -50,9 +50,12 @@ const useWardrobe = () => {
       const formData = new FormData();
       formData.append("image", imageFile);
 
-      const res = await axiosInstance.post("/cloths", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      // IMPORTANT: do NOT set Content-Type manually here. FormData needs the
+      // browser to generate the multipart boundary itself; if we set
+      // "multipart/form-data" ourselves, the boundary is missing and the
+      // backend's multer parser fails on every request (this was the bug
+      // causing all uploads to fail with a 500).
+      const res = await axiosInstance.post("/cloths", formData);
       return { success: true, cloth: res.data.cloth };
     } catch (err) {
       const msg = err.response?.data?.message || "Failed to add item";

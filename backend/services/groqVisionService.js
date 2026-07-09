@@ -4,12 +4,13 @@
  * Analyzes a clothing image using a Groq vision-capable model and returns
  * structured attribute data as JSON.
  *
- * STATUS: interface is complete and wired into the app, but GROQ_API_KEY is
- * not yet set (per your setup). Until it is, analyzeClothingImage() throws a
- * clear, caught error — the calling controller treats that the same as "AI
- * couldn't identify this," saving the item with null fields rather than
- * failing the upload. Once you add GROQ_API_KEY to .env, this starts
- * working with no other code changes needed.
+ * Called AFTER the image has already been uploaded to Cloudinary — it takes
+ * the resulting secure_url, not the raw file, so the controller's flow is
+ * strictly: Cloudinary upload -> get URL -> Groq analysis by URL.
+ * If GROQ_API_KEY is missing or the call fails for any reason,
+ * analyzeClothingImage() throws a clear, caught error — the calling
+ * controller treats that the same as "AI couldn't identify this," saving
+ * the item with null fields rather than failing the upload.
  *
  * MODEL NAME: GROQ_VISION_MODEL defaults to a placeholder below. Groq's
  * lineup of vision-capable models changes over time — confirm the current
@@ -153,17 +154,20 @@ const clampConfidence = (raw) => {
 };
 
 /**
- * Analyzes a clothing image buffer using Groq's vision model.
+ * Analyzes a clothing image using Groq's vision model, given a **public
+ * image URL** (the Cloudinary secure_url). Groq's OpenAI-compatible chat
+ * completions endpoint accepts a plain https URL in `image_url.url` just
+ * like it accepts a base64 data URL, so this keeps the pipeline in the
+ * order Cloudinary upload -> URL -> Groq analysis.
  *
- * @param {Buffer} buffer - raw image bytes (from multer memoryStorage)
- * @param {string} mimeType - e.g. "image/jpeg"
+ * @param {string} imageUrl - Cloudinary secure_url of the already-uploaded image
  * @returns {Promise<object>} structured clothing attributes, category already normalized
  * @throws if GROQ_API_KEY is missing, the API call fails, or the response isn't valid JSON
  */
-const analyzeClothingImage = async (buffer, mimeType) => {
+const analyzeClothingImage = async (imageUrl) => {
   const client = getClient();
-  const base64Image = buffer.toString("base64");
-  const dataUrl = `data:${mimeType};base64,${base64Image}`;
+
+  console.log(`[groq] Sending image to Groq for analysis -> model=${GROQ_VISION_MODEL}`);
 
   const completion = await client.chat.completions.create({
     model: GROQ_VISION_MODEL,
@@ -172,7 +176,7 @@ const analyzeClothingImage = async (buffer, mimeType) => {
         role: "user",
         content: [
           { type: "text", text: ANALYSIS_PROMPT },
-          { type: "image_url", image_url: { url: dataUrl } },
+          { type: "image_url", image_url: { url: imageUrl } },
         ],
       },
     ],
@@ -181,12 +185,15 @@ const analyzeClothingImage = async (buffer, mimeType) => {
     response_format: { type: "json_object" },
   });
 
+  console.log("[groq] Response received from Groq");
+
   const raw = completion.choices?.[0]?.message?.content;
   if (!raw) throw new Error("Groq returned an empty response");
 
   let parsed;
   try {
     parsed = JSON.parse(raw);
+    console.log("[groq] JSON parsed successfully");
   } catch {
     throw new Error("Groq response was not valid JSON");
   }

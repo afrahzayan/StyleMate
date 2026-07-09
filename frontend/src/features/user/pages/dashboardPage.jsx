@@ -3,33 +3,24 @@ import { useNavigate } from "react-router-dom";
 import {
   Shirt,
   Layers,
-  CalendarDays,
   Heart,
   Plus,
   ArrowRight,
   Sparkles,
 } from "lucide-react";
 import Sidebar from "../components/sidebar";
+import useDashboard from "../hooks/useDashboard";
 
-// ── Static placeholder stats ──────────────────────────────
-const stats = [
-  { label: "CLOTHES",       value: "24",  sub: "3 added this week", icon: Shirt },
-  { label: "TOTAL OUTFITS", value: "28",  sub: "2 new combinations", icon: Layers },
-  { label: "TOTAL PLANNED", value: "12",  sub: "Next: Monday Brunch", icon: CalendarDays },
-  { label: "FAVORITES",     value: "15",  sub: "Loved items & looks", icon: Heart },
-];
-
-// ── Static placeholder recently added ─────────────────────
-const recentClothes = [
-  { name: "White Shirt",    brand: "Zara",    size: "Large",    emoji: "👔" },
-  { name: "Blue Jeans",     brand: "Levi's",  size: "32",       emoji: "👖" },
-  { name: "Black Hijab",    brand: "Modanisa",size: "One Size", emoji: "🧕" },
-  { name: "White Sneakers", brand: "Adidas",  size: "39",       emoji: "👟" },
+const STAT_ITEMS = [
+  { label: "CLOTHES",       key: "totalClothes",      icon: Shirt },
+  { label: "TOTAL OUTFITS", key: "outfitCount",       icon: Layers },
+  { label: "FAVORITES",     key: "favoriteClothesCount", icon: Heart },
 ];
 
 const DashboardPage = () => {
   const navigate = useNavigate();
-  const { user }  = useSelector((state) => state.auth);
+  const { user } = useSelector((state) => state.auth);
+  const { data: dashboard, isLoading } = useDashboard();
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ backgroundColor: "#faf8f5" }}>
@@ -48,9 +39,7 @@ const DashboardPage = () => {
           <h1 className="font-extrabold text-base" style={{ color: "#1c1c2e" }}>
             Dashboard
           </h1>
-          <button
-            className="flex items-center gap-1.5 text-gray-500 hover:text-gray-700"
-          >
+          <button className="flex items-center gap-1.5 text-gray-500 hover:text-gray-700">
             <div
               className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
               style={{ backgroundColor: "#4a5280" }}
@@ -84,21 +73,23 @@ const DashboardPage = () => {
           </div>
 
           {/* ── Stats cards ── */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-7">
-            {stats.map(({ label, value, sub, icon: Icon }) => (
-              <div
-                key={label}
-                className="bg-white rounded-xl p-4 border"
-                style={{ borderColor: "#ede8e0" }}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <p className="text-xs font-semibold text-gray-400 tracking-wide">{label}</p>
-                  <Icon size={16} style={{ color: "#4a5280" }} />
+          <div className="grid grid-cols-3 gap-4 mb-7">
+            {STAT_ITEMS.map(({ label, key, icon: Icon }) => {
+              const value = isLoading ? "—" : dashboard?.[key] ?? 0;
+              return (
+                <div
+                  key={label}
+                  className="bg-white rounded-xl p-4 border"
+                  style={{ borderColor: "#ede8e0" }}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <p className="text-xs font-semibold text-gray-400 tracking-wide">{label}</p>
+                    <Icon size={16} style={{ color: "#4a5280" }} />
+                  </div>
+                  <p className="text-2xl font-extrabold mb-0.5" style={{ color: "#1c1c2e" }}>{value}</p>
                 </div>
-                <p className="text-2xl font-extrabold mb-0.5" style={{ color: "#1c1c2e" }}>{value}</p>
-                <p className="text-xs text-gray-400">{sub}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* ── Bottom row: Recent clothes + AI card ── */}
@@ -126,21 +117,29 @@ const DashboardPage = () => {
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {recentClothes.map((item) => (
+                {(dashboard?.recentClothes || []).slice(0, 4).map((item) => (
                   <div
-                    key={item.name}
+                    key={item._id}
+                    onClick={() => navigate(`/wardrobe/${item._id}`)}
                     className="rounded-xl border p-3 flex flex-col items-center gap-2 hover:border-gray-300 transition-colors cursor-pointer"
                     style={{ borderColor: "#ede8e0" }}
                   >
                     <div
-                      className="w-full h-20 rounded-lg flex items-center justify-center text-3xl"
-                      style={{ backgroundColor: "#f0f2fa" }}
+                      className="w-full h-20 rounded-lg overflow-hidden bg-cover bg-center"
+                      style={{
+                        backgroundColor: "#f0f2fa",
+                        backgroundImage: item.image?.url ? `url(${item.image.url})` : undefined,
+                      }}
                     >
-                      {item.emoji}
+                      {!item.image?.url && (
+                        <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs">
+                          No image
+                        </div>
+                      )}
                     </div>
                     <div className="text-center">
                       <p className="text-xs font-semibold" style={{ color: "#1c1c2e" }}>{item.name}</p>
-                      <p className="text-xs text-gray-400">{item.brand} • {item.size}</p>
+                      <p className="text-xs text-gray-400">{item.category}</p>
                     </div>
                   </div>
                 ))}

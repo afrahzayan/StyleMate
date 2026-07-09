@@ -4,19 +4,33 @@ const { analyzeClothingImage, GROQ_VISION_MODEL } = require("../services/groqVis
 
 // ── ADD CLOTH ─────────────────────────────────────────────
 // POST /api/cloths  (multipart/form-data, field name "image")
-// Flow: validate upload -> analyze with AI -> upload to Cloudinary -> save.
+// Flow (in this exact order):
+//   1. validate upload
+//   2. upload to Cloudinary (must succeed, or the request fails)
+//   3. send the Cloudinary URL to Groq for analysis
+//   4. save Cloudinary URL + AI metadata to MongoDB
 // AI failure never blocks the save — the item is created with null fields
 // and aiMeta.analysisFailed = true, so the user can fill things in manually
 // on the item detail page instead of losing their upload entirely.
 const addCloth = async (req, res) => {
+  const reqId = Date.now().toString(36); // cheap correlation id for the logs below
   try {
+    console.log(`[addCloth:${reqId}] Request received. user=${req.userId}`);
+
     if (!req.file) {
+      console.log(`[addCloth:${reqId}] No file on req — check multipart boundary / field name "image"`);
       return res.status(400).json({ message: "No image file was uploaded" });
     }
 
-    const { buffer, mimetype } = req.file;
+    const { buffer } = req.file;
+    console.log(`[addCloth:${reqId}] File present: ${req.file.originalname}, ${req.file.size} bytes, ${req.file.mimetype}`);
 
-    // ── AI analysis (best-effort — failure is non-fatal) ──
+    // ── 1. Upload to Cloudinary first (this must succeed, or the request fails) ──
+    const { url, publicId } = await uploadBufferToCloudinary(buffer);
+    console.log(`[addCloth:${reqId}] Image uploaded to Cloudinary -> publicId=${publicId}`);
+    console.log(`[addCloth:${reqId}] Cloudinary URL generated -> ${url}`);
+
+    // ── 2. Send the Cloudinary URL to Groq for analysis (best-effort — failure is non-fatal) ──
     let aiData = null;
     let aiMeta = {
       provider: "groq",
@@ -28,18 +42,16 @@ const addCloth = async (req, res) => {
     };
 
     try {
-      aiData = await analyzeClothingImage(buffer, mimetype);
+      aiData = await analyzeClothingImage(url);
       aiMeta.confidenceScores = aiData.confidence || {};
+      console.log(`[addCloth:${reqId}] AI analysis complete -> category=${aiData.category}, title="${aiData.title}"`);
     } catch (aiErr) {
-      console.log("AI analysis failed:", aiErr.message);
+      console.log(`[addCloth:${reqId}] AI analysis failed:`, aiErr.message);
       aiMeta.analysisFailed = true;
       aiMeta.failureReason = aiErr.message;
     }
 
-    // ── Upload to Cloudinary (this must succeed, or the request fails) ──
-    const { url, publicId } = await uploadBufferToCloudinary(buffer);
-
-    // ── Build the document from whatever AI returned (or all-null fallback) ──
+    // ── 3. Build and save the document (Cloudinary URL + whatever AI returned) ──
     const newCloth = await Cloth.create({
       user: req.userId,
       image: { url, publicId },
@@ -77,9 +89,12 @@ const addCloth = async (req, res) => {
       aiMeta,
     });
 
+    console.log(`[addCloth:${reqId}] MongoDB document created -> _id=${newCloth._id}`);
+    console.log(`[addCloth:${reqId}] Response sent to frontend`);
+
     return res.status(201).json({ message: "Item added", cloth: newCloth });
   } catch (err) {
-    console.log(err);
+    console.log(`[addCloth:${reqId}] Failed:`, err);
 
     if (err.name === "ValidationError") {
       const fieldErrors = Object.fromEntries(
