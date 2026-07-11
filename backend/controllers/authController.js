@@ -8,15 +8,12 @@ const {
   generateRefreshToken,
 } = require("../utils/generateTokens");
 
-const PENDING_TTL_SECONDS = 5 * 60; // 5 minutes — covers both OTP validity and pending data lifetime
-const PENDING_TTL_MINUTES = PENDING_TTL_SECONDS / 60; // shown in the OTP email
+const PENDING_TTL_SECONDS = 5 * 60;
+const PENDING_TTL_MINUTES = PENDING_TTL_SECONDS / 60;
 const MAX_OTP_ATTEMPTS = 5;
 
 const pendingKey = (email) => `pendingRegistration:${email}`;
 
-// ── REGISTER ──────────────────────────────────────────────
-// Does NOT create a User. Stores hashed password + OTP in Redis
-// under one key so registration data and OTP always expire together.
 const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -25,7 +22,6 @@ const register = async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    // Only block if a VERIFIED user already owns this email.
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "Email already registered" });
@@ -42,8 +38,6 @@ const register = async (req, res) => {
       attempts: 0,
     };
 
-    // Overwrites any earlier unverified attempt for this email — that's fine,
-    // the old OTP becomes invalid and the new one is what gets emailed.
     await redisClient.set(
       pendingKey(email),
       JSON.stringify(pendingData),
@@ -62,8 +56,6 @@ const register = async (req, res) => {
   }
 };
 
-// ── VERIFY OTP ────────────────────────────────────────────
-// This is the ONLY place a User document gets created.
 const verifyOtp = async (req, res) => {
   try {
     const { email, otp } = req.body;
@@ -91,7 +83,6 @@ const verifyOtp = async (req, res) => {
         });
       }
 
-      // Persist the incremented attempt count, keep remaining TTL as-is
       const ttl = await redisClient.ttl(pendingKey(email));
       await redisClient.set(
         pendingKey(email),
@@ -103,8 +94,6 @@ const verifyOtp = async (req, res) => {
       return res.status(400).json({ message: "Invalid OTP" });
     }
 
-    // Race-condition guard: someone else may have registered this email
-    // with a different flow (e.g. Google) while this OTP was pending.
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       await redisClient.del(pendingKey(email));
@@ -114,12 +103,12 @@ const verifyOtp = async (req, res) => {
     const newUser = await User.create({
       name: pending.name,
       email: pending.email,
-      password: pending.password, // already hashed
+      password: pending.password,
       provider: "local",
       isVerified: true,
     });
 
-    await redisClient.del(pendingKey(email)); // OTP + pending data both gone now
+    await redisClient.del(pendingKey(email));
 
     const accessToken = generateAccessToken(newUser._id);
     const refreshToken = generateRefreshToken(newUser._id);
@@ -152,9 +141,6 @@ const verifyOtp = async (req, res) => {
   }
 };
 
-// ── RESEND OTP ────────────────────────────────────────────
-// Reuses the stored name/password from the pending registration —
-// no User lookup, since no User exists yet.
 const resendOtp = async (req, res) => {
   try {
     const { email } = req.body;
@@ -171,7 +157,7 @@ const resendOtp = async (req, res) => {
 
     const pending = JSON.parse(raw);
     pending.otp = generateOtp();
-    pending.attempts = 0; // fresh OTP, reset attempt counter
+    pending.attempts = 0;
 
     await redisClient.set(
       pendingKey(email),
@@ -188,8 +174,6 @@ const resendOtp = async (req, res) => {
     return res.status(500).json({ message: "Something went wrong" });
   }
 };
-
-// ── LOGIN / REFRESH / LOGOUT — unchanged ───────────────────
 
 const login = async (req, res) => {
   try {

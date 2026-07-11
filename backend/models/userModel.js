@@ -6,7 +6,6 @@ const userSchema = new Schema(
     name: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
 
-    // ---- Auth ----
     provider: { type: String, enum: ["local", "google"], default: "local" },
     password: {
       type: String,
@@ -31,9 +30,7 @@ const userSchema = new Schema(
 
     role: { type: String, enum: ["user", "admin"], default: "user" },
     status: { type: String, enum: ["active", "blocked"], default: "active" },
-    isVerified: { type: Boolean, default: false }, // becomes true after OTP verification
-
-   
+    isVerified: { type: Boolean, default: false },
 
     signatureColor: { type: String, default: "" },
     lastLoginAt: { type: Date },

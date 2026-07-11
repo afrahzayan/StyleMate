@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom";
 
-// ── Static data ────────────────────────────────────────────
 const features = [
   {
     icon: "🪡",
@@ -25,19 +24,16 @@ const bullets = [
   "Weather-synced outfit planning",
 ];
 
-// ── Component ──────────────────────────────────────────────
 const LandingPage = () => {
   const navigate = useNavigate();
 
   return (
     <div style={{ backgroundColor: "#faf8f5", minHeight: "100vh" }}>
 
-      {/* ══════════════ NAVBAR ══════════════ */}
       <nav
         className="flex items-center justify-between px-8 md:px-16 py-5 sticky top-0 z-10 bg-white border-b"
         style={{ borderColor: "#ede8e0" }}
       >
-        {/* Logo */}
         <div className="flex items-center gap-2">
           <span className="text-xl">👔</span>
           <div>
@@ -48,7 +44,6 @@ const LandingPage = () => {
           </div>
         </div>
 
-        {/* Nav buttons */}
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate("/login")}
@@ -67,10 +62,8 @@ const LandingPage = () => {
         </div>
       </nav>
 
-      {/* ══════════════ HERO ══════════════ */}
       <section className="flex flex-col md:flex-row items-center justify-between px-8 md:px-16 py-20 gap-12">
 
-        {/* Left — headline */}
         <div className="max-w-lg">
           <h1
             className="text-5xl font-extrabold leading-tight mb-5"
@@ -91,12 +84,10 @@ const LandingPage = () => {
           </button>
         </div>
 
-        {/* Right — decorative wardrobe card */}
         <div
           className="w-full max-w-sm h-72 rounded-3xl flex items-center justify-center shadow-lg"
           style={{ backgroundColor: "#ddd7cb" }}
         >
-          {/* Simple visual placeholder — replace with real image later */}
           <div className="text-center text-gray-500">
             <div className="flex gap-4 mb-3 justify-center">
               {["👗", "👔", "👠"].map((e) => (
@@ -108,7 +99,6 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* ══════════════ FEATURES ══════════════ */}
       <section className="px-8 md:px-16 py-16 text-center">
         <h2
           className="text-2xl font-extrabold mb-2"
@@ -146,12 +136,10 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* ══════════════ BOUTIQUE SECTION ══════════════ */}
       <section
         className="px-8 md:px-16 py-16 flex flex-col md:flex-row items-center gap-12"
         style={{ backgroundColor: "#ede8e0" }}
       >
-        {/* Left — 4-image grid */}
         <div className="grid grid-cols-2 gap-3 w-full max-w-xs shrink-0">
           {[
             { emoji: "👠", bg: "#c8b8a2" },
@@ -169,7 +157,6 @@ const LandingPage = () => {
           ))}
         </div>
 
-        {/* Right — text */}
         <div className="max-w-md">
           <h2
             className="text-3xl font-extrabold mb-4"
@@ -208,7 +195,6 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* ══════════════ FOOTER ══════════════ */}
       <footer
         className="text-center py-6 text-xs text-gray-400 border-t"
         style={{ borderColor: "#ede8e0" }}

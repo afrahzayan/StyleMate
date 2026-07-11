@@ -1,6 +1,3 @@
-// Standalone Cloudinary connectivity test — run with: node testCloudinary.js
-// Uses the exact same SDK call path as config/cloudinary.js, but isolated
-// from Express/multer/the frontend, so we can see the raw Cloudinary error.
 require("dotenv").config({ quiet: true });
 const cloudinary = require("cloudinary").v2;
 
@@ -17,7 +14,6 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// A tiny 1x1 red pixel PNG as base64 — no need to point at a real file.
 const TEST_IMAGE =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
 

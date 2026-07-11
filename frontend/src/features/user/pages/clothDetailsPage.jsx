@@ -11,7 +11,6 @@ const FORMALITY_OPTIONS = ["Formal", "Casual", "Semi-Formal"];
 const CONDITION_OPTIONS = ["New", "Good", "Worn", "Damaged"];
 const LAYERING_OPTIONS = ["Base", "Mid", "Outer"];
 
-// Simple labeled text input, reused throughout the form
 const Field = ({ label, value, onChange, placeholder = "Not detected" }) => (
   <div>
     <label className="block text-xs font-semibold mb-1.5" style={{ color: "#374151" }}>
@@ -68,7 +67,6 @@ const ClothDetailPage = () => {
       }
     };
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const set = (field, value) => setCloth((prev) => ({ ...prev, [field]: value }));
@@ -185,7 +183,6 @@ const ClothDetailPage = () => {
 
         <main className="flex-1 overflow-y-auto px-7 py-7">
           <div className="max-w-3xl grid grid-cols-1 md:grid-cols-[280px_1fr] gap-8">
-            {/* Image + AI status */}
             <div>
               <div
                 className="rounded-2xl overflow-hidden border aspect-square"
@@ -218,7 +215,6 @@ const ClothDetailPage = () => {
               ) : null}
             </div>
 
-            {/* Editable fields */}
             <div className="space-y-5">
               <Field label="Name" value={cloth.name} onChange={(v) => set("name", v)} />
 

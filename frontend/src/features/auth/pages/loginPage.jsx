@@ -33,7 +33,6 @@ const LoginPage = () => {
           className="flex w-full max-w-3xl bg-white rounded-2xl shadow-sm overflow-hidden border"
           style={{ borderColor: "#ede8e0" }}
         >
-          {/* Left decorative panel — narrow 35% */}
           <div
             className="hidden md:flex flex-col justify-end p-8 relative"
             style={{ backgroundColor: "#4a5280", width: "35%", minHeight: "460px" }}
@@ -50,7 +49,6 @@ const LoginPage = () => {
             </div>
           </div>
 
-          {/* Right form panel — wider 65% */}
           <div className="flex-1 flex flex-col justify-center px-8 py-9">
             <h2 className="text-xl font-extrabold mb-0.5" style={{ color: "#1c1c2e" }}>
               Login to your account

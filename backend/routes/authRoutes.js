@@ -19,7 +19,6 @@ router.post("/login", login);
 router.post("/refresh-token", refreshAccessToken);
 router.post("/logout", logout);
 
-// A simple test route to confirm protected routes work
 router.get("/me", protect, (req, res) => {
   res.status(200).json({ message: "You are authenticated", userId: req.userId });
 });

@@ -8,11 +8,8 @@ const {
   getUpcomingPlans: fetchUpcomingPlans,
 } = require("../services/plannerService");
 
-// ── helpers ──────────────────────────────────────────────────────
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
-// Confirms the outfit exists and belongs to the requesting user before
-// it's allowed to be attached to a plan.
 const validateOutfitBelongsToUser = async (outfitId, userId) => {
   if (!outfitId || !isValidObjectId(outfitId)) {
     return { valid: false, message: "A valid outfit must be selected" };
@@ -24,14 +21,9 @@ const validateOutfitBelongsToUser = async (outfitId, userId) => {
   return { valid: true, outfit };
 };
 
-// Parses a date (and optional separate time) into a single Date instant.
-// Accepts either a full ISO string in `date`, or a plain "YYYY-MM-DD" date
-// combined with a "HH:mm" time. Falls back to noon when no time is given,
-// so day-only plans still land on a predictable, stable instant.
 const buildPlanDate = (dateInput, timeInput) => {
   if (!dateInput) return null;
 
-  // Full ISO / parsable datetime string was sent directly.
   if (timeInput === undefined || timeInput === null || timeInput === "") {
     const asIs = new Date(dateInput);
     if (!isNaN(asIs.getTime()) && /T\d{2}:\d{2}/.test(String(dateInput))) {
@@ -39,7 +31,7 @@ const buildPlanDate = (dateInput, timeInput) => {
     }
   }
 
-  const datePart = String(dateInput).slice(0, 10); // "YYYY-MM-DD"
+  const datePart = String(dateInput).slice(0, 10);
   const timePart = /^\d{2}:\d{2}$/.test(timeInput || "") ? timeInput : "12:00";
   const combined = new Date(`${datePart}T${timePart}:00`);
   return isNaN(combined.getTime()) ? null : combined;
@@ -53,10 +45,6 @@ const dayBounds = (dateStr) => {
   return { start, end };
 };
 
-// ── CREATE / REPLACE A PLAN ─────────────────────────────────────
-// POST /api/planner   body: { outfitId, date, time?, notes? }
-// Upserts on (user, exact date+time): planning again for the same slot
-// replaces what was there instead of erroring.
 const createPlan = async (req, res) => {
   try {
     const { outfitId, date, time, notes } = req.body;
@@ -91,8 +79,6 @@ const createPlan = async (req, res) => {
   }
 };
 
-// ── GET MONTHLY PLANS ────────────────────────────────────────────
-// GET /api/planner/month?year=2024&month=6   (month is 1-indexed)
 const getMonthlyPlans = async (req, res) => {
   try {
     const now = new Date();
@@ -111,8 +97,6 @@ const getMonthlyPlans = async (req, res) => {
   }
 };
 
-// ── GET PLAN(S) FOR A SPECIFIC DATE ──────────────────────────────
-// GET /api/planner/date/:date   (:date = "YYYY-MM-DD")
 const getPlanByDate = async (req, res) => {
   try {
     const bounds = dayBounds(req.params.date);
@@ -126,8 +110,6 @@ const getPlanByDate = async (req, res) => {
   }
 };
 
-// ── UPDATE A PLAN ────────────────────────────────────────────────
-// PATCH /api/planner/:id   body: any of { outfitId, date, time, notes }
 const updatePlan = async (req, res) => {
   try {
     const plan = await Planner.findOne({ _id: req.params.id, user: req.userId });
@@ -161,8 +143,6 @@ const updatePlan = async (req, res) => {
   }
 };
 
-// ── DELETE A PLAN ────────────────────────────────────────────────
-// DELETE /api/planner/:id
 const deletePlan = async (req, res) => {
   try {
     const plan = await Planner.findOneAndDelete({ _id: req.params.id, user: req.userId });
@@ -174,8 +154,6 @@ const deletePlan = async (req, res) => {
   }
 };
 
-// ── GET UPCOMING PLANS ────────────────────────────────────────────
-// GET /api/planner/upcoming?limit=2
 const getUpcoming = async (req, res) => {
   try {
     const plans = await fetchUpcomingPlans(req.userId, req.query.limit);

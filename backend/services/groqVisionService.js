@@ -1,30 +1,8 @@
-/**
- * Groq Vision Service
- * ────────────────────
- * Analyzes a clothing image using a Groq vision-capable model and returns
- * structured attribute data as JSON.
- *
- * Called AFTER the image has already been uploaded to Cloudinary — it takes
- * the resulting secure_url, not the raw file, so the controller's flow is
- * strictly: Cloudinary upload -> get URL -> Groq analysis by URL.
- * If GROQ_API_KEY is missing or the call fails for any reason,
- * analyzeClothingImage() throws a clear, caught error — the calling
- * controller treats that the same as "AI couldn't identify this," saving
- * the item with null fields rather than failing the upload.
- *
- * MODEL NAME: GROQ_VISION_MODEL defaults to a placeholder below. Groq's
- * lineup of vision-capable models changes over time — confirm the current
- * model ID in Groq's docs (console.groq.com/docs/models) when you get your
- * key, and set GROQ_VISION_MODEL in .env to override the default here.
- */
-
 const Groq = require("groq-sdk");
 
 const GROQ_VISION_MODEL =
   process.env.GROQ_VISION_MODEL || "meta-llama/llama-4-scout-17b-16e-instruct";
 
-// Categories the rest of the app understands — the AI's free-text category
-// guess gets normalized into one of these before saving (see mapCategory).
 const VALID_CATEGORIES = ["Top", "Bottom", "Dress", "Hijab", "Foot Wears", "Bags", "Accessories"];
 
 const ANALYSIS_PROMPT = `You are a fashion cataloging assistant. Analyze the clothing item in this image and return ONLY a single valid JSON object — no markdown, no code fences, no commentary before or after it.
@@ -79,11 +57,6 @@ const getClient = () => {
   return groqClient;
 };
 
-/**
- * Maps the AI's free-text category guess to one of our fixed enum values.
- * Falls back to "Accessories" if nothing matches — a safe catch-all rather
- * than rejecting the save outright.
- */
 const mapCategory = (rawCategory) => {
   if (!rawCategory || typeof rawCategory !== "string") return "Accessories";
   const c = rawCategory.toLowerCase();
@@ -99,21 +72,13 @@ const mapCategory = (rawCategory) => {
   return VALID_CATEGORIES.includes(rawCategory) ? rawCategory : "Accessories";
 };
 
-// ── Normalizers for the other strict-enum schema fields ───────────────
-// Groq's vision model is asked for exact casing ("Men"/"Women"/"Unisex", etc.)
-// but LLMs don't reliably respect that. Cloth.create() enforces these as
-// case-sensitive Mongoose enums, so any mismatch (e.g. "unisex", "casual",
-// "good", "base") previously threw an uncaught ValidationError that bubbled
-// up as a generic 500 "Something went wrong while adding the item" — even
-// though the AI call itself succeeded. These normalizers make the mapping
-// tolerant of casing/wording the same way mapCategory() already does.
 const mapGenderSuitability = (raw) => {
   if (!raw || typeof raw !== "string") return null;
   const v = raw.trim().toLowerCase();
   if (v === "men" || v === "male" || v === "man") return "Men";
   if (v === "women" || v === "female" || v === "woman") return "Women";
   if (v === "unisex") return "Unisex";
-  return null; // unrecognized -> treat as "couldn't be identified"
+  return null;
 };
 
 const mapFormality = (raw) => {
@@ -144,26 +109,12 @@ const mapLayeringType = (raw) => {
   return null;
 };
 
-// Clamps a number into [0, 1]; returns null for anything non-numeric.
-// Guards against materialConfidence/confidence violating the schema's
-// min:0/max:1 validators (e.g. if the model returns a 0-100 style value).
 const clampConfidence = (raw) => {
   const n = Number(raw);
   if (Number.isNaN(n)) return null;
   return Math.min(1, Math.max(0, n));
 };
 
-/**
- * Analyzes a clothing image using Groq's vision model, given a **public
- * image URL** (the Cloudinary secure_url). Groq's OpenAI-compatible chat
- * completions endpoint accepts a plain https URL in `image_url.url` just
- * like it accepts a base64 data URL, so this keeps the pipeline in the
- * order Cloudinary upload -> URL -> Groq analysis.
- *
- * @param {string} imageUrl - Cloudinary secure_url of the already-uploaded image
- * @returns {Promise<object>} structured clothing attributes, category already normalized
- * @throws if GROQ_API_KEY is missing, the API call fails, or the response isn't valid JSON
- */
 const analyzeClothingImage = async (imageUrl) => {
   const client = getClient();
 

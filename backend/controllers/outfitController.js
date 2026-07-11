@@ -2,11 +2,8 @@ const mongoose = require("mongoose");
 const Outfit = require("../models/outfitModel");
 const Cloth = require("../models/clothModel");
 
-// Fields that are safe for a client to set directly on an Outfit.
-// `items` is validated separately below since it needs an ownership check.
 const EDITABLE_FIELDS = ["name", "occasion"];
 
-// ── helper: make sure every item id belongs to this user and isn't deleted ──
 const validateItemsBelongToUser = async (itemIds, userId) => {
   if (!Array.isArray(itemIds) || itemIds.length === 0) {
     return { valid: false, message: "An outfit needs at least one wardrobe item" };
@@ -25,8 +22,6 @@ const validateItemsBelongToUser = async (itemIds, userId) => {
   return { valid: true };
 };
 
-// ── CREATE OUTFIT ────────────────────────────────────────────
-// POST /api/outfits   body: { name, occasion, items: [clothId, ...], source }
 const createOutfit = async (req, res) => {
   try {
     const { name, occasion, items, source } = req.body;
@@ -60,8 +55,6 @@ const createOutfit = async (req, res) => {
   }
 };
 
-// ── GET ALL OUTFITS (for the logged-in user) ─────────────────
-// GET /api/outfits?occasion=Work&sort=recent&favorite=true&search=gala
 const getOutfits = async (req, res) => {
   try {
     const { occasion, sort, favorite, search } = req.query;
@@ -70,14 +63,11 @@ const getOutfits = async (req, res) => {
     if (occasion && occasion !== "All") filter.occasion = occasion;
     if (favorite === "true") filter.isFavorite = true;
 
-    // Single search box on the Favorites page matches either the outfit
-    // name or its occasion label (e.g. typing "formal" finds Formal outfits).
     if (search && search.trim()) {
       const regex = new RegExp(search.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
       filter.$or = [{ name: regex }, { occasion: regex }];
     }
 
-    // "Recently Modified" (default) uses updatedAt; also support name A→Z
     const sortMap = {
       recent: { updatedAt: -1 },
       oldest: { updatedAt: 1 },
@@ -93,10 +83,6 @@ const getOutfits = async (req, res) => {
   }
 };
 
-// ── FAVORITE STATS ────────────────────────────────────────────
-// GET /api/outfits/favorites/stats
-// Powers the three summary cards on the Favorites page. Computed live
-// (not cached) since favoriting/unfavoriting and wear counts change often.
 const getFavoriteStats = async (req, res) => {
   try {
     const userObjectId = new mongoose.Types.ObjectId(req.userId);
@@ -130,8 +116,6 @@ const getFavoriteStats = async (req, res) => {
   }
 };
 
-// ── GET ONE OUTFIT ────────────────────────────────────────────
-// GET /api/outfits/:id
 const getOutfitById = async (req, res) => {
   try {
     const outfit = await Outfit.findOne({ _id: req.params.id, user: req.userId }).populate("items");
@@ -143,8 +127,6 @@ const getOutfitById = async (req, res) => {
   }
 };
 
-// ── UPDATE OUTFIT ─────────────────────────────────────────────
-// PATCH /api/outfits/:id   body: any of { name, occasion, items }
 const updateOutfit = async (req, res) => {
   try {
     const outfit = await Outfit.findOne({ _id: req.params.id, user: req.userId });
@@ -169,8 +151,6 @@ const updateOutfit = async (req, res) => {
   }
 };
 
-// ── TOGGLE FAVORITE ───────────────────────────────────────────
-// PATCH /api/outfits/:id/favorite
 const toggleFavorite = async (req, res) => {
   try {
     const outfit = await Outfit.findOne({ _id: req.params.id, user: req.userId });
@@ -186,10 +166,6 @@ const toggleFavorite = async (req, res) => {
   }
 };
 
-// ── DELETE OUTFIT ──────────────────────────────────────────────
-// DELETE /api/outfits/:id
-// Hard delete — unlike Cloth, the schema has no isDeleted flag for Outfit,
-// and nothing else references an Outfit by id, so a real delete is safe.
 const deleteOutfit = async (req, res) => {
   try {
     const outfit = await Outfit.findOneAndDelete({ _id: req.params.id, user: req.userId });

@@ -3,8 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Clock, Trash2, Pencil, ImageOff, Check } from "lucide-react";
 
 const formatDateHeading = (dateStr) => {
-  // dateStr = "YYYY-MM-DD" — build the Date from parts so it's read as local,
-  // never shifted a day by an implicit UTC parse.
   const [y, m, d] = dateStr.split("-").map(Number);
   const dt = new Date(y, m - 1, d);
   return dt.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
@@ -22,8 +20,8 @@ const PlanOutfitModal = ({
   outfits = [],
   isSaving = false,
   onClose,
-  onSave, // (payload: { outfitId, time, notes }, editingPlanId | null) => Promise
-  onDelete, // (planId) => Promise
+  onSave,
+  onDelete,
 }) => {
   const [editingPlanId, setEditingPlanId] = useState(null);
   const [selectedOutfitId, setSelectedOutfitId] = useState(null);
@@ -88,7 +86,6 @@ const PlanOutfitModal = ({
           className="w-full max-w-lg bg-white rounded-[20px] overflow-hidden flex flex-col"
           style={{ maxHeight: "88vh", boxShadow: "0 20px 60px rgba(28,28,46,0.25)" }}
         >
-          {/* ── Header ── */}
           <div className="flex items-center justify-between px-6 py-5 border-b shrink-0" style={{ borderColor: "#ede8e0" }}>
             <div>
               <p className="text-xs font-semibold tracking-wide" style={{ color: "#7C8197" }}>PLAN OUTFIT</p>
@@ -100,7 +97,6 @@ const PlanOutfitModal = ({
           </div>
 
           <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
-            {/* ── Existing plans for this date ── */}
             {existingPlans.length > 0 && (
               <div className="space-y-2.5">
                 <p className="text-xs font-semibold tracking-wide" style={{ color: "#7C8197" }}>
@@ -163,7 +159,6 @@ const PlanOutfitModal = ({
               </div>
             )}
 
-            {/* ── Picker / form ── */}
             {showPicker && (
               <div className="space-y-4">
                 <div>

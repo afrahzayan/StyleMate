@@ -12,7 +12,6 @@ import {
   User,
   LogOut,
 } from "lucide-react";
-// Sidebar lives in user/components → auth/hooks is two levels up then into auth
 import useAuth from "../../auth/hooks/useAuth";
 
 const navItems = [
@@ -48,13 +47,11 @@ const Sidebar = () => {
       className="flex flex-col w-60 min-h-screen shrink-0"
       style={{ backgroundColor: "#3d4467" }}
     >
-      {/* ── Brand ── */}
       <div className="px-6 py-6 border-b" style={{ borderColor: "#4e5580" }}>
         <p className="text-white font-extrabold text-base leading-tight">StyleMate</p>
         <p className="text-xs mt-0.5" style={{ color: "#9ba3c4" }}>Personal Stylist</p>
       </div>
 
-      {/* ── Nav links ── */}
       <nav className="flex-1 px-3 py-4 space-y-1">
         {navItems.map(({ label, icon: Icon, path }) => {
           const active = location.pathname === path;
@@ -75,7 +72,6 @@ const Sidebar = () => {
         })}
       </nav>
 
-      {/* ── Bottom: Profile + Logout ── */}
       <div
         className="px-3 pb-6 space-y-1 border-t pt-4"
         style={{ borderColor: "#4e5580" }}

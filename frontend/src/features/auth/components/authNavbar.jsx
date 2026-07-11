@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom";
 
-// Navbar used on all auth pages: login, signup, verify-otp
 const AuthNavbar = () => {
   const navigate = useNavigate();
 
@@ -9,7 +8,6 @@ const AuthNavbar = () => {
       className="w-full flex items-center justify-between px-6 md:px-10 py-4 border-b bg-white"
       style={{ borderColor: "#ede8e0" }}
     >
-      {/* Logo */}
       <button onClick={() => navigate("/")} className="flex items-center gap-2">
         <span className="text-lg">👔</span>
         <span className="font-extrabold text-base" style={{ color: "#343857" }}>
@@ -17,7 +15,6 @@ const AuthNavbar = () => {
         </span>
       </button>
 
-      {/* Right links */}
       <div className="flex items-center gap-2">
         <button
           onClick={() => navigate("/login")}

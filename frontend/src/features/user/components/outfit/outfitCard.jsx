@@ -1,11 +1,6 @@
 import { motion } from "framer-motion";
-import { Heart, ImageOff, Pencil } from "lucide-react";
+import { Heart, ImageOff, Pencil, Trash2 } from "lucide-react";
 
-// ── Mosaic layout ──────────────────────────────────────────────
-// Arranges however many wardrobe items an outfit has into a Pinterest-style
-// grid. 3 items (the common case: top + bottom + foot wears) gets the signature
-// "large left, two stacked right" layout from the reference design; other
-// counts fall back to sensible grids so the card never breaks.
 const getSlotClasses = (count, index) => {
   if (count === 1) return "col-span-2 row-span-2";
   if (count === 2) return "row-span-2";
@@ -13,13 +8,12 @@ const getSlotClasses = (count, index) => {
     if (index === 0) return "row-span-2";
     return "row-span-1";
   }
-  // 4 or more — plain 2x2, extras are folded into a "+N" overlay on the last tile
   return "row-span-1";
 };
 
 const visibleCount = (total) => Math.min(total, 4);
 
-const OutfitCard = ({ outfit, onToggleFavorite, onClick }) => {
+const OutfitCard = ({ outfit, onToggleFavorite, onClick, onDelete }) => {
   const items = outfit.items || [];
   const shown = visibleCount(items.length);
   const extra = items.length - shown;
@@ -44,7 +38,6 @@ const OutfitCard = ({ outfit, onToggleFavorite, onClick }) => {
         boxShadow: "0 1px 3px rgba(47,52,71,0.06)",
       }}
     >
-      {/* ── Image mosaic ── */}
       <div className="p-2.5">
         <div
           className="grid grid-cols-2 grid-rows-2 gap-1.5 rounded-[14px] overflow-hidden"
@@ -77,7 +70,6 @@ const OutfitCard = ({ outfit, onToggleFavorite, onClick }) => {
                 </div>
               )}
 
-              {/* "+N more" overlay on the last visible tile */}
               {i === shown - 1 && extra > 0 && (
                 <div
                   className="absolute inset-0 flex items-center justify-center text-white font-semibold text-sm"
@@ -91,7 +83,6 @@ const OutfitCard = ({ outfit, onToggleFavorite, onClick }) => {
         </div>
       </div>
 
-      {/* ── Footer ── */}
       <div className="flex items-center justify-between gap-2 px-4 pb-4 pt-1">
         <div className="min-w-0">
           <p className="text-sm font-bold truncate" style={{ color: "#2F3447" }}>
@@ -113,6 +104,17 @@ const OutfitCard = ({ outfit, onToggleFavorite, onClick }) => {
             aria-label="Edit outfit"
           >
             <Pencil size={14} />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete?.(e, outfit._id);
+            }}
+            className="w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50"
+            style={{ color: "#C0392B" }}
+            aria-label="Delete outfit"
+          >
+            <Trash2 size={14} />
           </button>
           <button
             onClick={(e) => {

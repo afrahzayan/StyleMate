@@ -28,7 +28,6 @@ const SignupPage = () => {
 
     const result = await register(name, email, password);
     if (result.success) {
-      // Pass email to the OTP page via navigation state
       navigate("/verify-otp", { state: { email } });
     } else {
       setFormError(result.message);
@@ -45,7 +44,6 @@ const SignupPage = () => {
           className="flex w-full max-w-3xl bg-white rounded-2xl shadow-sm overflow-hidden border"
           style={{ borderColor: "#ede8e0" }}
         >
-          {/* Left decorative panel — narrow 35% */}
           <div
             className="hidden md:flex flex-col justify-end p-8 relative"
             style={{ backgroundColor: "#6b5b8a", width: "35%", minHeight: "520px" }}
@@ -62,7 +60,6 @@ const SignupPage = () => {
             </div>
           </div>
 
-          {/* Right form panel */}
           <div className="flex-1 flex flex-col justify-center px-8 py-9">
             <h2 className="text-xl font-extrabold mb-0.5" style={{ color: "#1c1c2e" }}>
               Sign up for StyleMate
@@ -71,7 +68,6 @@ const SignupPage = () => {
 
             <form onSubmit={handleSendOtp} className="space-y-3.5">
 
-              {/* Full Name */}
               <div>
                 <label className="block text-xs font-semibold mb-1.5" style={{ color: "#374151" }}>Full Name</label>
                 <div className="flex items-center gap-2 border rounded-lg px-3 py-2.5" style={{ borderColor: "#e5e7eb" }}>
@@ -86,7 +82,6 @@ const SignupPage = () => {
                 </div>
               </div>
 
-              {/* Email */}
               <div>
                 <label className="block text-xs font-semibold mb-1.5" style={{ color: "#374151" }}>Email address</label>
                 <div className="flex items-center gap-2 border rounded-lg px-3 py-2.5" style={{ borderColor: "#e5e7eb" }}>
@@ -101,7 +96,6 @@ const SignupPage = () => {
                 </div>
               </div>
 
-              {/* Password row */}
               <div className="flex gap-3">
                 <div className="flex-1">
                   <label className="block text-xs font-semibold mb-1.5" style={{ color: "#374151" }}>Password</label>
@@ -137,7 +131,6 @@ const SignupPage = () => {
                 </div>
               </div>
 
-              {/* Terms */}
               <label className="flex items-start gap-2.5 cursor-pointer">
                 <input
                   type="checkbox"
@@ -158,7 +151,6 @@ const SignupPage = () => {
                 <p className="text-red-500 text-xs">{formError || error}</p>
               )}
 
-              {/* Send OTP button — not "Sign Up" */}
               <button
                 type="submit"
                 disabled={isLoading}

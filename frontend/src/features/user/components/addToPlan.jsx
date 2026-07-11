@@ -41,7 +41,6 @@ const AddToPlannerModal = ({ outfit, isSaving = false, onClose, onSave }) => {
           className="w-full max-w-sm bg-white rounded-[20px] overflow-hidden"
           style={{ boxShadow: "0 20px 60px rgba(28,28,46,0.25)" }}
         >
-          {/* ── Header ── */}
           <div className="flex items-center justify-between px-6 py-5 border-b" style={{ borderColor: "#ede8e0" }}>
             <div className="flex items-center gap-2">
               <CalendarDays size={16} style={{ color: "#52557A" }} />
@@ -53,7 +52,6 @@ const AddToPlannerModal = ({ outfit, isSaving = false, onClose, onSave }) => {
           </div>
 
           <div className="px-6 py-5 space-y-4">
-            {/* ── Outfit being scheduled ── */}
             <div className="flex items-center gap-3 rounded-xl border p-2.5" style={{ borderColor: "#ede8e0" }}>
               <div
                 className="w-12 h-12 rounded-lg overflow-hidden shrink-0 flex items-center justify-center"

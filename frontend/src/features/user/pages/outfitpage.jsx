@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, User, Sparkles } from "lucide-react";
+import { Plus, User, Sparkles, ArrowLeft } from "lucide-react";
 import toast from "react-hot-toast";
 
 import Sidebar from "../components/sidebar";
@@ -10,16 +10,18 @@ import FilterPills from "../components/outfit/filterPills";
 import SortMenu from "../components/outfit/sortMenu";
 import useOutfits from "../hooks/useOtfits";
 
-// Filter pills map to the real `occasion` enum on the Outfit model
-// (Casual, Formal, Party, Work, Wedding, Eid, Other) — "All Seasons" is the
-// unfiltered view. Values here are sent straight to the API's ?occasion= param.
 const FILTERS = [
   { label: "All Seasons", value: "All" },
   { label: "Casual", value: "Casual" },
   { label: "Work", value: "Work" },
+  { label: "Office", value: "Office" },
+  { label: "College", value: "College" },
   { label: "Formal", value: "Formal" },
   { label: "Party", value: "Party" },
   { label: "Wedding", value: "Wedding" },
+  { label: "Traditional", value: "Traditional" },
+  { label: "Travel", value: "Travel" },
+  { label: "Sports", value: "Sports" },
   { label: "Eid", value: "Eid" },
   { label: "Other", value: "Other" },
 ];
@@ -32,7 +34,7 @@ const SORT_OPTIONS = [
 
 const OutfitsPage = () => {
   const navigate = useNavigate();
-  const { isLoading, fetchOutfits, toggleFavorite } = useOutfits();
+  const { isLoading, fetchOutfits, toggleFavorite, deleteOutfit } = useOutfits();
 
   const [outfits, setOutfits] = useState([]);
   const [activeFilter, setActiveFilter] = useState("All");
@@ -49,7 +51,6 @@ const OutfitsPage = () => {
 
   useEffect(() => {
     loadOutfits();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeFilter, sort]);
 
   const handleToggleFavorite = async (e, id) => {
@@ -58,6 +59,19 @@ const OutfitsPage = () => {
       setOutfits((prev) =>
         prev.map((o) => (o._id === id ? { ...o, isFavorite: result.outfit.isFavorite } : o))
       );
+    } else {
+      toast.error(result.message);
+    }
+  };
+
+  const handleDelete = async (e, id) => {
+    e.stopPropagation();
+    const confirmed = window.confirm("Are you sure you want to remove this outfit?");
+    if (!confirmed) return;
+    const result = await deleteOutfit(id);
+    if (result.success) {
+      setOutfits((prev) => prev.filter((o) => o._id !== id));
+      toast.success("Outfit removed");
     } else {
       toast.error(result.message);
     }
@@ -77,18 +91,25 @@ const OutfitsPage = () => {
       <Sidebar />
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* ── Header ── */}
         <header
           className="flex items-center justify-between gap-4 px-8 py-5 bg-white border-b shrink-0"
           style={{ borderColor: "#E5E7EB" }}
         >
-          <div className="flex items-baseline gap-3">
-            <h1 className="text-2xl font-bold" style={{ color: "#2F3447", fontFamily: "'Poppins', sans-serif" }}>
-              My Outfits
-            </h1>
-            <span className="text-sm" style={{ color: "#7C8197" }}>
-              {collectionsLabel}
-            </span>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate(-1)}
+              className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-100 transition-colors shrink-0"
+            >
+              <ArrowLeft size={18} style={{ color: "#1c1c2e" }} />
+            </button>
+            <div className="flex items-baseline gap-3">
+              <h1 className="text-2xl font-bold" style={{ color: "#2F3447", fontFamily: "'Poppins', sans-serif" }}>
+                My Outfits
+              </h1>
+              <span className="text-sm" style={{ color: "#7C8197" }}>
+                {collectionsLabel}
+              </span>
+            </div>
           </div>
 
           <div className="flex items-center gap-3">
@@ -111,7 +132,6 @@ const OutfitsPage = () => {
           </div>
         </header>
 
-        {/* ── Body ── */}
         <main className="flex-1 overflow-y-auto px-8 py-6">
           <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
             <FilterPills options={FILTERS} active={activeFilter} onChange={setActiveFilter} />
@@ -154,6 +174,7 @@ const OutfitsPage = () => {
                     outfit={outfit}
                     onToggleFavorite={handleToggleFavorite}
                     onClick={handleCardClick(outfit)}
+                    onDelete={handleDelete}
                   />
                 ))}
               </AnimatePresence>

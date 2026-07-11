@@ -14,7 +14,6 @@ const wearLogSchema = new Schema(
 wearLogSchema.index({ user: 1, dateWorn: -1 });
 wearLogSchema.index({ user: 1, outfit: 1 });
 
-// Keep Outfit.timesWorn in sync automatically whenever a wear is logged
 wearLogSchema.post("save", async function (doc) {
   await Outfit.findByIdAndUpdate(doc.outfit, { $inc: { timesWorn: 1 } });
 });

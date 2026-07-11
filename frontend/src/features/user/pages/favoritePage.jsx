@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { Search, User, Heart, Sparkles, CalendarCheck, ImageOff } from "lucide-react";
+import { Search, User, Heart, Sparkles, CalendarCheck, ImageOff, ArrowLeft } from "lucide-react";
 import toast from "react-hot-toast";
 
 import Sidebar from "../components/sidebar";
@@ -27,7 +27,6 @@ const SORT_OPTIONS = [
   { label: "Name A–Z", value: "name" },
 ];
 
-// Debounce so every keystroke in the search box doesn't fire a request.
 const useDebouncedValue = (value, delayMs) => {
   const [debounced, setDebounced] = useState(value);
   useEffect(() => {
@@ -52,7 +51,7 @@ const FavoritesPage = () => {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 350);
 
-  const [plannerOutfit, setPlannerOutfit] = useState(null); // outfit object | null
+  const [plannerOutfit, setPlannerOutfit] = useState(null);
   const [isSavingPlan, setIsSavingPlan] = useState(false);
 
   const loadFavorites = useCallback(async () => {
@@ -62,13 +61,11 @@ const FavoritesPage = () => {
     } else {
       toast.error(result.message);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeFilter, sort, debouncedSearch]);
 
   const loadStats = useCallback(async () => {
     const result = await fetchFavoriteStats();
     if (result.success) setStats(result.stats);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadFavoriteCloths = useCallback(async () => {
@@ -76,7 +73,6 @@ const FavoritesPage = () => {
     if (result.success) {
       setFavoriteCloths(result.cloths);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -130,16 +126,23 @@ const FavoritesPage = () => {
       <Sidebar />
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* ── Header ── */}
         <header
           className="flex items-center justify-between gap-4 px-8 py-5 bg-white border-b shrink-0 flex-wrap"
           style={{ borderColor: "#E5E7EB" }}
         >
-          <div>
-            <h1 className="text-2xl font-bold" style={{ color: "#2F3447", fontFamily: "'Poppins', sans-serif" }}>
-              Favorites
-            </h1>
-            <p className="text-xs mt-0.5" style={{ color: "#7C8197" }}>{subtitle}</p>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate(-1)}
+              className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-100 transition-colors shrink-0"
+            >
+              <ArrowLeft size={18} style={{ color: "#1c1c2e" }} />
+            </button>
+            <div>
+              <h1 className="text-2xl font-bold" style={{ color: "#2F3447", fontFamily: "'Poppins', sans-serif" }}>
+                Favorites
+              </h1>
+              <p className="text-xs mt-0.5" style={{ color: "#7C8197" }}>{subtitle}</p>
+            </div>
           </div>
 
           <div className="flex items-center gap-3 flex-wrap">
@@ -167,9 +170,7 @@ const FavoritesPage = () => {
           </div>
         </header>
 
-        {/* ── Body ── */}
         <main className="flex-1 overflow-y-auto px-8 py-6">
-          {/* ── Stat cards ── */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
             <div className="bg-white rounded-xl p-4 border flex items-center gap-3" style={{ borderColor: "#ede8e0" }}>
               <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: "#EDEBFA" }}>
@@ -202,12 +203,10 @@ const FavoritesPage = () => {
             </div>
           </div>
 
-          {/* ── Filters ── */}
           <div className="mb-6">
             <FilterPills options={FILTERS} active={activeFilter} onChange={setActiveFilter} />
           </div>
 
-          {/* ── Grid ── */}
           {isLoading && favorites.length === 0 && favoriteCloths.length === 0 ? (
             <div className="flex items-center justify-center py-24 text-sm" style={{ color: "#7C8197" }}>
               Loading your favorites...
@@ -228,7 +227,6 @@ const FavoritesPage = () => {
             </div>
           ) : (
             <>
-              {/* ── Favorite Clothes ── */}
               {favoriteCloths.length > 0 && (
                 <div className="mb-8">
                   <h2 className="text-sm font-bold mb-4" style={{ color: "#2F3447" }}>Favorite Items</h2>
@@ -274,7 +272,6 @@ const FavoritesPage = () => {
                 </div>
               )}
 
-              {/* ── Favorite Outfits ── */}
               {favorites.length > 0 && (
                 <div>
                   <h2 className="text-sm font-bold mb-4" style={{ color: "#2F3447" }}>Favorite Outfits</h2>

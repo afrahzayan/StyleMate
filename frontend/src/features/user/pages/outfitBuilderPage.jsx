@@ -1,18 +1,13 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, X, GripVertical, Save, Trash2, ImageOff } from "lucide-react";
+import { Search, X, GripVertical, Save, Trash2, ImageOff, ArrowLeft } from "lucide-react";
 import toast from "react-hot-toast";
 
 import Sidebar from "../components/sidebar";
 import useWardrobe from "../hooks/useWardrobe";
 import useOutfits from "../hooks/useOtfits";
 
-// Maps the reference design's tabs onto the real Cloth `category` enum.
-// Nothing here changes the schema — it's purely how the builder groups
-// existing categories for browsing. Hijab and Bags get their own tabs
-// (rather than being folded into "Accs") so each category can be filtered
-// independently.
 const TABS = [
   { key: "Top", label: "Top", categories: ["Top", "Dress"] },
   { key: "Bottom", label: "Bottom", categories: ["Bottom"] },
@@ -22,14 +17,16 @@ const TABS = [
   { key: "Accs", label: "Accessories", categories: ["Accessories"] },
 ];
 
-// Order items appear in the vertical canvas, top-to-bottom.
 const CATEGORY_ORDER = ["Top", "Dress", "Bottom", "Foot Wears", "Hijab", "Bags", "Accessories"];
 
-const OCCASIONS = ["Casual", "Formal", "Party", "Work", "Wedding", "Eid", "Other"];
+const OCCASIONS = [
+  "Casual", "Formal", "Office", "College", "Party", "Work",
+  "Wedding", "Traditional", "Travel", "Sports", "Eid", "Other",
+];
 
 const OutfitBuilderPage = () => {
   const navigate = useNavigate();
-  const { id } = useParams(); // present only when editing an existing outfit
+  const { id } = useParams();
   const isEditMode = Boolean(id);
 
   const { isLoading: wardrobeLoading, fetchCloths } = useWardrobe();
@@ -39,23 +36,20 @@ const OutfitBuilderPage = () => {
   const [activeTab, setActiveTab] = useState("Top");
   const [search, setSearch] = useState("");
 
-  const [selectedIds, setSelectedIds] = useState([]); // ordered array of Cloth _id
-  const [selectedMap, setSelectedMap] = useState({}); // _id -> cloth object (for canvas render without refetch)
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [selectedMap, setSelectedMap] = useState({});
 
   const [outfitName, setOutfitName] = useState("");
   const [occasion, setOccasion] = useState("Casual");
 
-  // ── Load wardrobe items once ──────────────────────────────────
   useEffect(() => {
     (async () => {
       const result = await fetchCloths({ category: "All" });
       if (result.success) setAllCloths(result.cloths);
       else toast.error(result.message);
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── If editing, preload the existing outfit ──────────────────
   useEffect(() => {
     if (!isEditMode) return;
     (async () => {
@@ -71,7 +65,6 @@ const OutfitBuilderPage = () => {
         navigate("/outfits");
       }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const activeCategories = TABS.find((t) => t.key === activeTab)?.categories || [];
@@ -85,7 +78,6 @@ const OutfitBuilderPage = () => {
     return items;
   }, [allCloths, activeCategories, search]);
 
-  // ── Canvas items, grouped visually top -> bottom ─────────────
   const canvasItems = useMemo(() => {
     return selectedIds
       .map((cid) => selectedMap[cid])
@@ -140,14 +132,21 @@ const OutfitBuilderPage = () => {
       <Sidebar />
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* ── Header ── */}
         <header
           className="flex items-center justify-between gap-4 px-8 py-5 bg-white border-b shrink-0"
           style={{ borderColor: "#E5E7EB" }}
         >
-          <h1 className="text-2xl font-bold" style={{ color: "#2F3447", fontFamily: "'Poppins', sans-serif" }}>
-            {isEditMode ? "Edit Outfit" : "Build Your Outfit"}
-          </h1>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate(-1)}
+              className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-100 transition-colors shrink-0"
+            >
+              <ArrowLeft size={18} style={{ color: "#1c1c2e" }} />
+            </button>
+            <h1 className="text-2xl font-bold" style={{ color: "#2F3447", fontFamily: "'Poppins', sans-serif" }}>
+              {isEditMode ? "Edit Outfit" : "Build Your Outfit"}
+            </h1>
+          </div>
 
           <div
             className="flex items-center gap-2 w-72 px-3 py-2 rounded-xl"
@@ -165,9 +164,7 @@ const OutfitBuilderPage = () => {
           </div>
         </header>
 
-        {/* ── Body: two panels ── */}
         <div className="flex-1 flex overflow-hidden">
-          {/* Left panel — wardrobe browser */}
           <div className="w-[420px] shrink-0 border-r overflow-y-auto px-6 py-5" style={{ borderColor: "#E5E7EB" }}>
             <div className="flex flex-wrap gap-2 mb-5">
               {TABS.map((tab) => {
@@ -238,7 +235,6 @@ const OutfitBuilderPage = () => {
             )}
           </div>
 
-          {/* Right panel — outfit canvas */}
           <div className="flex-1 flex flex-col overflow-hidden">
             <div className="flex-1 overflow-y-auto px-8 py-6">
               <p className="text-xs font-semibold tracking-wide mb-4" style={{ color: "#7C8197" }}>
@@ -293,7 +289,6 @@ const OutfitBuilderPage = () => {
                   </div>
                 )}
 
-                {/* Add-more placeholder slots, purely visual affordance */}
                 {canvasItems.length > 0 && (
                   <div className="flex gap-2">
                     <div
@@ -313,7 +308,6 @@ const OutfitBuilderPage = () => {
               </div>
             </div>
 
-            {/* ── Bottom action bar ── */}
             <div
               className="flex items-center gap-3 px-8 py-4 border-t bg-white shrink-0 flex-wrap"
               style={{ borderColor: "#E5E7EB" }}

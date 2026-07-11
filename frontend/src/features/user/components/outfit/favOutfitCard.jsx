@@ -1,8 +1,6 @@
 import { motion } from "framer-motion";
 import { Heart, ImageOff, CalendarPlus } from "lucide-react";
 
-// Same mosaic layout logic as outfitCard.jsx, kept in sync intentionally so
-// favorite cards and outfit-page cards look identical.
 const getSlotClasses = (count, index) => {
   if (count === 1) return "col-span-2 row-span-2";
   if (count === 2) return "row-span-2";
@@ -39,7 +37,6 @@ const FavoriteOutfitCard = ({ outfit, onToggleFavorite, onAddToPlanner, onClick 
       className="group rounded-[20px] bg-white overflow-hidden flex flex-col"
       style={{ border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(47,52,71,0.06)" }}
     >
-      {/* ── Image mosaic ── */}
       <div className="p-2.5 cursor-pointer" onClick={onClick}>
         <div className="grid grid-cols-2 grid-rows-2 gap-1.5 rounded-[14px] overflow-hidden relative" style={{ height: "230px" }}>
           {items.length === 0 && (
@@ -77,7 +74,6 @@ const FavoriteOutfitCard = ({ outfit, onToggleFavorite, onAddToPlanner, onClick 
             </div>
           ))}
 
-          {/* ── Favorite (heart) toggle — top right ── */}
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -90,7 +86,6 @@ const FavoriteOutfitCard = ({ outfit, onToggleFavorite, onAddToPlanner, onClick 
             <Heart size={15} fill="#52557A" style={{ color: "#52557A" }} />
           </button>
 
-          {/* ── Occasion badge — bottom left ── */}
           <span
             className="absolute bottom-2.5 left-2.5 px-2.5 py-1 rounded-md text-[10px] font-bold tracking-wide text-white uppercase z-10"
             style={{ backgroundColor: badgeColor }}
@@ -100,7 +95,6 @@ const FavoriteOutfitCard = ({ outfit, onToggleFavorite, onAddToPlanner, onClick 
         </div>
       </div>
 
-      {/* ── Footer ── */}
       <div className="px-4 pb-4 pt-1 flex-1 flex flex-col">
         <p className="text-sm font-bold cursor-pointer" style={{ color: "#2F3447" }} onClick={onClick}>
           {outfit.name}

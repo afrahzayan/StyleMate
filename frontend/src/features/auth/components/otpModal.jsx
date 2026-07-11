@@ -10,25 +10,21 @@ const OtpModal = ({ email, onClose }) => {
   const [error, setError] = useState("");
   const [resendMsg, setResendMsg] = useState("");
 
-  // We use refs to move focus between boxes automatically
   const inputRefs = useRef([]);
 
   const handleChange = (index, value) => {
-    // Only allow single digit numbers
     if (!/^[0-9]?$/.test(value)) return;
 
     const updated = [...digits];
     updated[index] = value;
     setDigits(updated);
 
-    // Auto-move to next box when a digit is typed
     if (value && index < 5) {
       inputRefs.current[index + 1].focus();
     }
   };
 
   const handleKeyDown = (index, e) => {
-    // Move back to previous box on backspace if current box is empty
     if (e.key === "Backspace" && !digits[index] && index > 0) {
       inputRefs.current[index - 1].focus();
     }
@@ -46,7 +42,6 @@ const OtpModal = ({ email, onClose }) => {
       navigate("/dashboard");
     } else {
       setError(result.message);
-      // Clear boxes on wrong OTP
       setDigits(["", "", "", "", "", ""]);
       inputRefs.current[0].focus();
     }
@@ -66,14 +61,12 @@ const OtpModal = ({ email, onClose }) => {
   };
 
   return (
-    // Dark overlay
     <div
       className="fixed inset-0 z-50 flex items-center justify-center"
       style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
     >
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-8">
 
-        {/* Icon + heading */}
         <div className="text-center mb-7">
           <div
             className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl"
@@ -90,7 +83,6 @@ const OtpModal = ({ email, onClose }) => {
           </p>
         </div>
 
-        {/* 6 digit input boxes */}
         <div className="flex justify-center gap-3 mb-6">
           {digits.map((digit, i) => (
             <input
@@ -112,12 +104,10 @@ const OtpModal = ({ email, onClose }) => {
           ))}
         </div>
 
-        {/* Error */}
         {error && (
           <p className="text-red-500 text-sm text-center mb-4">{error}</p>
         )}
 
-        {/* Verify button */}
         <button
           onClick={handleVerify}
           disabled={isLoading}
@@ -127,7 +117,6 @@ const OtpModal = ({ email, onClose }) => {
           {isLoading ? "Verifying..." : "Verify & Continue"}
         </button>
 
-        {/* Resend */}
         <div className="text-center">
           <span className="text-sm text-gray-500">Didn&apos;t receive it? </span>
           <button
@@ -143,7 +132,6 @@ const OtpModal = ({ email, onClose }) => {
           <p className="text-center text-xs mt-2 text-green-600">{resendMsg}</p>
         )}
 
-        {/* Cancel */}
         <button
           onClick={onClose}
           className="w-full mt-4 text-sm text-gray-400 hover:text-gray-600"

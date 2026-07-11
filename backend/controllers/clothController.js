@@ -2,18 +2,8 @@ const Cloth = require("../models/clothModel");
 const { uploadBufferToCloudinary, deleteFromCloudinary } = require("../config/cloudinary");
 const { analyzeClothingImage, GROQ_VISION_MODEL } = require("../services/groqVisionService");
 
-// ── ADD CLOTH ─────────────────────────────────────────────
-// POST /api/cloths  (multipart/form-data, field name "image")
-// Flow (in this exact order):
-//   1. validate upload
-//   2. upload to Cloudinary (must succeed, or the request fails)
-//   3. send the Cloudinary URL to Groq for analysis
-//   4. save Cloudinary URL + AI metadata to MongoDB
-// AI failure never blocks the save — the item is created with null fields
-// and aiMeta.analysisFailed = true, so the user can fill things in manually
-// on the item detail page instead of losing their upload entirely.
 const addCloth = async (req, res) => {
-  const reqId = Date.now().toString(36); // cheap correlation id for the logs below
+  const reqId = Date.now().toString(36);
   try {
     console.log(`[addCloth:${reqId}] Request received. user=${req.userId}`);
 
@@ -25,12 +15,10 @@ const addCloth = async (req, res) => {
     const { buffer } = req.file;
     console.log(`[addCloth:${reqId}] File present: ${req.file.originalname}, ${req.file.size} bytes, ${req.file.mimetype}`);
 
-    // ── 1. Upload to Cloudinary first (this must succeed, or the request fails) ──
     const { url, publicId } = await uploadBufferToCloudinary(buffer);
     console.log(`[addCloth:${reqId}] Image uploaded to Cloudinary -> publicId=${publicId}`);
     console.log(`[addCloth:${reqId}] Cloudinary URL generated -> ${url}`);
 
-    // ── 2. Send the Cloudinary URL to Groq for analysis (best-effort — failure is non-fatal) ──
     let aiData = null;
     let aiMeta = {
       provider: "groq",
@@ -51,7 +39,6 @@ const addCloth = async (req, res) => {
       aiMeta.failureReason = aiErr.message;
     }
 
-    // ── 3. Build and save the document (Cloudinary URL + whatever AI returned) ──
     const newCloth = await Cloth.create({
       user: req.userId,
       image: { url, publicId },
@@ -59,7 +46,7 @@ const addCloth = async (req, res) => {
       name: aiData?.title?.trim() || "Untitled Item",
       description: aiData?.description || "",
 
-      category: aiData?.category || "Accessories", // already normalized by the service
+      category: aiData?.category || "Accessories",
       subCategory: aiData?.subCategory ?? null,
 
       color: {
@@ -110,8 +97,6 @@ const addCloth = async (req, res) => {
   }
 };
 
-// ── GET ALL CLOTHES (for the logged-in user) ────────────────
-// GET /api/cloths?category=Top&search=white+shirt
 const getCloths = async (req, res) => {
   try {
     const { category, search, favorite } = req.query;
@@ -129,8 +114,6 @@ const getCloths = async (req, res) => {
   }
 };
 
-// ── GET ONE CLOTH ────────────────────────────────────────────
-// GET /api/cloths/:id
 const getClothById = async (req, res) => {
   try {
     const cloth = await Cloth.findOne({
@@ -147,9 +130,6 @@ const getClothById = async (req, res) => {
   }
 };
 
-// ── UPDATE CLOTH ──────────────────────────────────────────────
-// PATCH /api/cloths/:id
-// Any of the schema's editable fields can be sent; only known fields are applied.
 const EDITABLE_FIELDS = [
   "name", "description", "category", "subCategory", "color",
   "pattern", "sleeveType", "neckType", "fit", "fabric", "materialConfidence",
@@ -182,8 +162,6 @@ const updateCloth = async (req, res) => {
   }
 };
 
-// ── TOGGLE FAVORITE ───────────────────────────────────────────
-// PATCH /api/cloths/:id/favorite
 const toggleFavorite = async (req, res) => {
   try {
     const cloth = await Cloth.findOne({
@@ -204,11 +182,6 @@ const toggleFavorite = async (req, res) => {
   }
 };
 
-// ── DELETE CLOTH (soft delete) ────────────────────────────────
-// DELETE /api/cloths/:id
-// Soft delete only — keeps Outfit references valid, matching the existing
-// isDeleted pattern already in the schema. The Cloudinary image is left in
-// place intentionally (an Outfit elsewhere may still render it).
 const deleteCloth = async (req, res) => {
   try {
     const cloth = await Cloth.findOne({

@@ -1,13 +1,10 @@
 import { useState } from "react";
 import axiosInstance from "../../../shared/api/axiosInstance";
 
-// Mirrors useWardrobe.js: per-page state (not Redux) since this is list/detail
-// CRUD data scoped to the Outfits pages, matching the existing pattern.
 const useOutfits = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // ── FETCH ALL (optionally filtered by occasion/favorite, searched, sorted) ─
   const fetchOutfits = async ({ occasion, sort, favorite, search } = {}) => {
     setIsLoading(true);
     setError("");
@@ -28,7 +25,6 @@ const useOutfits = () => {
     }
   };
 
-  // ── FAVORITE STATS (saved count, total worn, top occasion) ────
   const fetchFavoriteStats = async () => {
     try {
       const res = await axiosInstance.get("/outfits/favorites/stats");
@@ -38,7 +34,6 @@ const useOutfits = () => {
     }
   };
 
-  // ── FETCH ONE ─────────────────────────────────────────────────
   const fetchOutfitById = async (id) => {
     setIsLoading(true);
     setError("");
@@ -54,8 +49,6 @@ const useOutfits = () => {
     }
   };
 
-  // ── CREATE ───────────────────────────────────────────────────
-  // payload: { name, occasion, items: [clothId, ...], source }
   const createOutfit = async (payload) => {
     setIsLoading(true);
     setError("");
@@ -71,7 +64,6 @@ const useOutfits = () => {
     }
   };
 
-  // ── UPDATE ───────────────────────────────────────────────────
   const updateOutfit = async (id, fields) => {
     setIsLoading(true);
     setError("");
@@ -87,7 +79,6 @@ const useOutfits = () => {
     }
   };
 
-  // ── TOGGLE FAVORITE ──────────────────────────────────────────
   const toggleFavorite = async (id) => {
     try {
       const res = await axiosInstance.patch(`/outfits/${id}/favorite`);
@@ -97,7 +88,6 @@ const useOutfits = () => {
     }
   };
 
-  // ── DELETE ───────────────────────────────────────────────────
   const deleteOutfit = async (id) => {
     try {
       await axiosInstance.delete(`/outfits/${id}`);

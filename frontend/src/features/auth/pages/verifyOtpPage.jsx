@@ -8,7 +8,6 @@ const VerifyOtpPage = () => {
   const location  = useLocation();
   const { verifyOtp, resendOtp, isLoading } = useAuth();
 
-  // Email was passed from signup page via navigate state
   const email = location.state?.email || "";
 
   const [digits, setDigits]       = useState(["", "", "", "", "", ""]);
@@ -63,7 +62,6 @@ const VerifyOtpPage = () => {
       className="min-h-screen flex flex-col"
       style={{ backgroundColor: "#faf8f5" }}
     >
-      {/* ── Top: just the logo ── */}
       <div className="px-8 py-5">
         <button
           onClick={() => navigate("/")}
@@ -74,13 +72,11 @@ const VerifyOtpPage = () => {
         </button>
       </div>
 
-      {/* ── Center card ── */}
       <div className="flex flex-1 items-center justify-center px-4 pb-10">
         <div
           className="bg-white rounded-2xl shadow-sm border w-full max-w-sm px-8 py-10"
           style={{ borderColor: "#ede8e0" }}
         >
-          {/* Mail icon */}
           <div className="flex justify-center mb-6">
             <div
               className="w-14 h-14 rounded-full flex items-center justify-center"
@@ -90,7 +86,6 @@ const VerifyOtpPage = () => {
             </div>
           </div>
 
-          {/* Heading */}
           <h1
             className="text-center text-2xl font-extrabold mb-2"
             style={{ color: "#343857" }}
@@ -103,7 +98,6 @@ const VerifyOtpPage = () => {
             Please enter it below to confirm your account.
           </p>
 
-          {/* 6 digit input boxes */}
           <div className="flex justify-center gap-2.5 mb-6">
             {digits.map((digit, i) => (
               <input
@@ -125,12 +119,10 @@ const VerifyOtpPage = () => {
             ))}
           </div>
 
-          {/* Error */}
           {error && (
             <p className="text-red-500 text-xs text-center mb-4">{error}</p>
           )}
 
-          {/* Verify button */}
           <button
             onClick={handleVerify}
             disabled={isLoading}
@@ -140,10 +132,8 @@ const VerifyOtpPage = () => {
             {isLoading ? "Verifying..." : "Verify"}
           </button>
 
-          {/* Divider line */}
           <hr style={{ borderColor: "#ede8e0" }} />
 
-          {/* Resend code */}
           <p className="text-center text-sm text-gray-500 mt-4">
             Didn&apos;t receive the code?{" "}
             <button
@@ -159,7 +149,6 @@ const VerifyOtpPage = () => {
             <p className="text-center text-xs mt-2 text-green-600">{resendMsg}</p>
           )}
 
-          {/* Secure verification note */}
           <div className="flex items-center justify-center gap-1.5 mt-5">
             <Lock size={11} className="text-gray-400" />
             <span className="text-xs tracking-widest font-medium text-gray-400">
@@ -169,7 +158,6 @@ const VerifyOtpPage = () => {
         </div>
       </div>
 
-      {/* ── Footer ── */}
       <footer className="flex items-center justify-between px-8 py-4 text-xs text-gray-400 border-t" style={{ borderColor: "#ede8e0" }}>
         <span>© 2024 StyleMate Digital Boutique. All rights reserved.</span>
         <div className="flex gap-4">

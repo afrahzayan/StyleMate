@@ -1,13 +1,10 @@
 import { useState } from "react";
 import axiosInstance from "../../../shared/api/axiosInstance";
 
-// Mirrors useOutfits.js: per-page state (not Redux) since this is CRUD data
-// scoped to the Planner page, matching the existing pattern.
 const usePlanner = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // ── FETCH MONTH (calendar view) ──────────────────────────────
   const fetchMonthlyPlans = async (year, month) => {
     setIsLoading(true);
     setError("");
@@ -23,7 +20,6 @@ const usePlanner = () => {
     }
   };
 
-  // ── FETCH PLANS FOR ONE DATE ("YYYY-MM-DD") ──────────────────
   const fetchPlansByDate = async (dateStr) => {
     setIsLoading(true);
     setError("");
@@ -39,8 +35,6 @@ const usePlanner = () => {
     }
   };
 
-  // ── CREATE / REPLACE A PLAN ───────────────────────────────────
-  // payload: { outfitId, date: "YYYY-MM-DD", time?: "HH:mm", notes? }
   const savePlan = async (payload) => {
     setIsLoading(true);
     setError("");
@@ -56,7 +50,6 @@ const usePlanner = () => {
     }
   };
 
-  // ── UPDATE A PLAN ──────────────────────────────────────────────
   const updatePlan = async (id, fields) => {
     setIsLoading(true);
     setError("");
@@ -72,7 +65,6 @@ const usePlanner = () => {
     }
   };
 
-  // ── DELETE A PLAN ────────────────────────────────────────────────
   const deletePlan = async (id) => {
     try {
       await axiosInstance.delete(`/planner/${id}`);
@@ -82,7 +74,6 @@ const usePlanner = () => {
     }
   };
 
-  // ── FETCH UPCOMING PLANS ────────────────────────────────────────
   const fetchUpcoming = async (limit = 2) => {
     try {
       const res = await axiosInstance.get("/planner/upcoming", { params: { limit } });

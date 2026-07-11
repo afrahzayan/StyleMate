@@ -15,38 +15,34 @@ const clothRoutes = require("./routes/clothRoutes");
 const outfitRoutes = require("./routes/outfitRoutes");
 const dashboardRoutes = require("./routes/dashboardRoute");
 const plannerRoutes = require("./routes/plannerRoutes");
+const aiSuggestionRoutes = require("./routes/aiSuggestionRoutes");
 
 const app = express();
 
-// ---- Middleware ----
 app.use(express.json());
 app.use(cookieParser());
 app.use(morgan("dev"));
 app.use(
   cors({
     origin: "http://localhost:5173",
-    credentials: true, // allows cookies to be sent
+    credentials: true,
   })
 );
 
-// DB connection
 connectDB();
 
-// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoute);
 app.use("/api/cloths", clothRoutes);
 app.use("/api/outfits", outfitRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/planner", plannerRoutes);
+app.use("/api/ai-suggestions", aiSuggestionRoutes);
 
 app.get("/", (req, res) => {
   res.send("StyleMate API is running");
 });
 
-// ---- Multer error handler ----
-// Catches file-too-large / wrong-mimetype errors thrown by upload.js and
-// returns a clean JSON response instead of Express's default HTML error page.
 app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     if (err.code === "LIMIT_FILE_SIZE") {
@@ -60,12 +56,6 @@ app.use((err, req, res, next) => {
   next(err);
 });
 
-// ---- Generic catch-all error handler ----
-// Without this, any error that isn't a MulterError (e.g. a malformed
-// multipart request with no boundary) falls through to Express's default
-// handler, which returns a bare HTML 500 with no JSON body. This was
-// masking the real cause of upload failures. Always keep this as the
-// LAST middleware registered.
 app.use((err, req, res, next) => {
   console.error(`[${new Date().toISOString()}] Unhandled error on ${req.method} ${req.originalUrl}:`, err);
   if (res.headersSent) return next(err);

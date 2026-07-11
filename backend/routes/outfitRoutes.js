@@ -12,9 +12,6 @@ const {
   deleteOutfit,
 } = require("../controllers/outfitController");
 
-// All outfit routes require login.
-// No file upload here — outfits are built only from existing wardrobe
-// (Cloth) items, never raw images, per the schema's design.
 router.post("/", protect, createOutfit);
 router.get("/", protect, getOutfits);
 router.get("/favorites/stats", protect, getFavoriteStats);

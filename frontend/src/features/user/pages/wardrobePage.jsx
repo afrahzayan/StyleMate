@@ -1,13 +1,12 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Plus, Heart, ImageOff } from "lucide-react";
+import { Search, Plus, Heart, ImageOff, ArrowLeft } from "lucide-react";
 import toast from "react-hot-toast";
 import Sidebar from "../../user/components/sidebar";
 import useWardrobe from "../hooks/useWardrobe";
 
 const CATEGORY_TABS = ["All", "Top", "Bottom", "Dress", "Hijab", "Foot Wears", "Bags", "Accessories"];
 
-// Display labels differ slightly from the stored enum values (plural, nicer wording)
 const TAB_LABELS = {
   All: "All",
   Top: "Tops",
@@ -38,7 +37,6 @@ const WardrobePage = () => {
 
   useEffect(() => {
     loadCloths(activeTab);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
   const visibleCloths = useMemo(() => {
@@ -54,7 +52,6 @@ const WardrobePage = () => {
     const ids = visibleCloths.map((c) => c._id);
     const idsKey = ids.join(",");
 
-    // Only reshuffle when the set of IDs changes (add/remove), not on property changes
     if (prevIdsRef.current !== idsKey) {
       prevIdsRef.current = idsKey;
       shuffledMapRef.current.clear();
@@ -71,11 +68,10 @@ const WardrobePage = () => {
     return [...visibleCloths].sort(
       (a, b) => (shuffledMapRef.current.get(a._id) ?? 0) - (shuffledMapRef.current.get(b._id) ?? 0)
     );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visibleCloths]);
 
   const handleToggleFavorite = async (e, id) => {
-    e.stopPropagation(); // don't trigger the card's navigate-to-detail click
+    e.stopPropagation();
     const result = await toggleFavorite(id);
     if (result.success) {
       setCloths((prev) =>
@@ -86,7 +82,6 @@ const WardrobePage = () => {
     }
   };
 
-  // Small subtitle line under each item's name, e.g. "Top • White • Summer"
   const subtitleFor = (cloth) => {
     const parts = [cloth.category, cloth.color?.primary, cloth.season].filter(Boolean);
     return parts.join(" • ");
@@ -97,14 +92,21 @@ const WardrobePage = () => {
       <Sidebar />
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* ── Top bar ── */}
         <header
           className="flex items-center justify-between gap-4 px-7 py-4 bg-white border-b shrink-0"
           style={{ borderColor: "#ede8e0" }}
         >
-          <h1 className="font-extrabold text-base shrink-0" style={{ color: "#1c1c2e" }}>
-            My Wardrobe
-          </h1>
+          <div className="flex items-center gap-3 shrink-0">
+            <button
+              onClick={() => navigate(-1)}
+              className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-100 transition-colors shrink-0"
+            >
+              <ArrowLeft size={18} style={{ color: "#1c1c2e" }} />
+            </button>
+            <h1 className="font-extrabold text-base shrink-0" style={{ color: "#1c1c2e" }}>
+              My Wardrobe
+            </h1>
+          </div>
 
           <div className="flex items-center gap-3 flex-1 max-w-md ml-auto">
             <div
@@ -131,10 +133,8 @@ const WardrobePage = () => {
           </div>
         </header>
 
-        {/* ── Body ── */}
         <main className="flex-1 overflow-y-auto px-7 py-6">
 
-          {/* Category tabs */}
           <div className="flex items-center gap-2 mb-6 flex-wrap">
             {CATEGORY_TABS.map((tab) => {
               const active = activeTab === tab;
@@ -155,7 +155,6 @@ const WardrobePage = () => {
             })}
           </div>
 
-          {/* Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
             {isLoading && cloths.length === 0 ? (
               <div className="col-span-full flex items-center justify-center py-16 text-sm text-gray-400">

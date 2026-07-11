@@ -6,6 +6,7 @@ import {
   Heart,
   Plus,
   ArrowRight,
+  ArrowLeft,
   CalendarDays,
   Clock,
   ImageOff,
@@ -38,20 +39,25 @@ const DashboardPage = () => {
   return (
     <div className="flex h-screen overflow-hidden" style={{ backgroundColor: "#faf8f5" }}>
 
-      {/* ── Sidebar ── */}
       <Sidebar />
 
-      {/* ── Main content ── */}
       <div className="flex-1 flex flex-col overflow-hidden">
 
-        {/* Top bar */}
         <header
           className="flex items-center justify-between px-7 py-4 bg-white border-b shrink-0"
           style={{ borderColor: "#ede8e0" }}
         >
-          <h1 className="font-extrabold text-base" style={{ color: "#1c1c2e" }}>
-            Dashboard
-          </h1>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate(-1)}
+              className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-100 transition-colors shrink-0"
+            >
+              <ArrowLeft size={18} style={{ color: "#1c1c2e" }} />
+            </button>
+            <h1 className="font-extrabold text-base" style={{ color: "#1c1c2e" }}>
+              Dashboard
+            </h1>
+          </div>
           <button className="flex items-center gap-1.5 text-gray-500 hover:text-gray-700">
             <div
               className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
@@ -62,10 +68,8 @@ const DashboardPage = () => {
           </button>
         </header>
 
-        {/* Scrollable page body */}
         <main className="flex-1 overflow-y-auto px-7 py-6">
 
-          {/* ── Greeting row ── */}
           <div className="mb-6">
             <h2 className="text-xl font-extrabold" style={{ color: "#1c1c2e" }}>
               Hello, {user?.name?.split(" ")[0] || "there"}!
@@ -75,7 +79,6 @@ const DashboardPage = () => {
             </p>
           </div>
 
-          {/* ── Stats cards ── */}
           <div className="grid grid-cols-3 gap-4 mb-7">
             {STAT_ITEMS.map(({ label, key, icon: Icon }) => {
               const value = isLoading ? "—" : dashboard?.[key] ?? 0;
@@ -95,10 +98,8 @@ const DashboardPage = () => {
             })}
           </div>
 
-          {/* ── Bottom row: Recent clothes + AI card ── */}
           <div className="flex gap-5">
 
-            {/* Left: Recently Added Clothes */}
             <div
               className="flex-1 bg-white rounded-xl p-5 border"
               style={{ borderColor: "#ede8e0" }}
@@ -147,7 +148,6 @@ const DashboardPage = () => {
                   </div>
                 ))}
 
-                {/* Add more card */}
                 <button
                   onClick={() => navigate("/wardrobe/add")}
                   className="rounded-xl border-2 border-dashed p-3 flex flex-col items-center justify-center gap-2 text-gray-400 hover:border-gray-400 transition-colors"
@@ -159,7 +159,6 @@ const DashboardPage = () => {
               </div>
             </div>
 
-            {/* Right: Upcoming Planned Outfits card */}
             <div
               className="w-64 shrink-0 rounded-xl p-5 flex flex-col"
               style={{ backgroundColor: "#4a5280" }}

@@ -12,11 +12,6 @@ const useAuth = () => {
   const dispatch = useDispatch();
   const { user, isLoading, error } = useSelector((state) => state.auth);
 
-  // ── REGISTER ──────────────────────────────────────────────
-  // Returns { success: true } if API accepted the request and OTP was sent.
-  // NOTE: this does NOT log the user in (no user/token yet), so we must
-  // explicitly reset isLoading here — loginSuccess() is what normally does
-  // that, but it isn't called on this path.
   const register = async (name, email, password) => {
     dispatch(setLoading());
     try {
@@ -34,7 +29,6 @@ const useAuth = () => {
     }
   };
 
-  // ── VERIFY OTP ────────────────────────────────────────────
   const verifyOtp = async (email, otp) => {
     dispatch(setLoading());
     try {
@@ -53,7 +47,6 @@ const useAuth = () => {
     }
   };
 
-  // ── RESEND OTP ────────────────────────────────────────────
   const resendOtp = async (email) => {
     try {
       await axiosInstance.post("/auth/resend-otp", { email });
@@ -66,7 +59,6 @@ const useAuth = () => {
     }
   };
 
-  // ── LOGIN ─────────────────────────────────────────────────
   const login = async (email, password) => {
     dispatch(setLoading());
     try {
@@ -85,12 +77,10 @@ const useAuth = () => {
     }
   };
 
-  // ── LOGOUT ────────────────────────────────────────────────
   const logout = async () => {
     try {
       await axiosInstance.post("/auth/logout");
     } catch (_) {
-      // even if API fails, clear local state
     }
     dispatch(logoutSuccess());
   };

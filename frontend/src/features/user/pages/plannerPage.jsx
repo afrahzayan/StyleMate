@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useSelector } from "react-redux";
-import { ChevronLeft, ChevronRight, Search, ImageOff, User } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { ChevronLeft, ChevronRight, Search, ImageOff, User, ArrowLeft } from "lucide-react";
 import toast from "react-hot-toast";
 
 import Sidebar from "../components/sidebar";
@@ -10,15 +11,12 @@ import useOutfits from "../hooks/useOtfits";
 
 const WEEKDAYS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
-// "YYYY-MM-DD" built from local date parts — never shifts a day via UTC parsing.
 const toDateKey = (year, month, day) =>
   `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
-// Builds a 6-row (42-cell) grid for the given month, including the tail end
-// of the previous month and the lead-in of the next, like the reference calendar.
 const buildMonthGrid = (year, monthIndex) => {
   const firstOfMonth = new Date(year, monthIndex, 1);
-  const startWeekday = firstOfMonth.getDay(); // 0 = Sun
+  const startWeekday = firstOfMonth.getDay();
   const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
   const daysInPrevMonth = new Date(year, monthIndex, 0).getDate();
 
@@ -45,16 +43,17 @@ const buildMonthGrid = (year, monthIndex) => {
 const outfitThumb = (outfit) => outfit?.items?.find((i) => i?.image?.url)?.image?.url || null;
 
 const PlannerPage = () => {
+  const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
   const { fetchMonthlyPlans, fetchPlansByDate, savePlan, updatePlan, deletePlan, isLoading } = usePlanner();
   const { fetchOutfits } = useOutfits();
 
   const today = useMemo(() => new Date(), []);
   const [cursor, setCursor] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
-  const [plansByDate, setPlansByDate] = useState({}); // { "YYYY-MM-DD": [plan, ...] }
+  const [plansByDate, setPlansByDate] = useState({});
   const [outfits, setOutfits] = useState([]);
   const [search, setSearch] = useState("");
-  const [selectedDate, setSelectedDate] = useState(null); // "YYYY-MM-DD" | null
+  const [selectedDate, setSelectedDate] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
 
   const todayKey = toDateKey(today.getFullYear(), today.getMonth(), today.getDate());
@@ -76,7 +75,6 @@ const PlannerPage = () => {
     } else {
       toast.error(result.message);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cursor]);
 
   useEffect(() => {
@@ -88,7 +86,6 @@ const PlannerPage = () => {
       const result = await fetchOutfits({ sort: "recent" });
       if (result.success) setOutfits(result.outfits);
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const weeks = useMemo(() => buildMonthGrid(cursor.getFullYear(), cursor.getMonth()), [cursor]);
@@ -103,7 +100,6 @@ const PlannerPage = () => {
   const matchesSearch = (plans) =>
     !searchQuery || plans.some((p) => p.outfit?.name?.toLowerCase().includes(searchQuery));
 
-  // ── Modal handlers ──────────────────────────────────────────
   const closeModal = () => setSelectedDate(null);
 
   const handleSave = async (payload, editingPlanId) => {
@@ -145,12 +141,17 @@ const PlannerPage = () => {
       <Sidebar />
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* ── Header ── */}
         <header
           className="flex items-center justify-between gap-4 px-8 py-5 bg-white border-b shrink-0 flex-wrap"
           style={{ borderColor: "#E5E7EB" }}
         >
           <div className="flex items-center gap-4 flex-wrap">
+            <button
+              onClick={() => navigate(-1)}
+              className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-100 transition-colors shrink-0"
+            >
+              <ArrowLeft size={18} style={{ color: "#1c1c2e" }} />
+            </button>
             <h1 className="text-2xl font-bold" style={{ color: "#2F3447", fontFamily: "'Poppins', sans-serif" }}>
               Outfit Planner
             </h1>
@@ -200,10 +201,8 @@ const PlannerPage = () => {
           </div>
         </header>
 
-        {/* ── Calendar ── */}
         <main className="flex-1 overflow-y-auto px-8 py-6">
           <div className="bg-white rounded-2xl border overflow-hidden" style={{ borderColor: "#E5E7EB" }}>
-            {/* Weekday row */}
             <div className="grid grid-cols-7" style={{ backgroundColor: "#F5F4EC" }}>
               {WEEKDAYS.map((d) => (
                 <div key={d} className="py-3 text-center text-xs font-bold tracking-wide" style={{ color: "#7C8197" }}>
@@ -212,7 +211,6 @@ const PlannerPage = () => {
               ))}
             </div>
 
-            {/* Weeks */}
             {weeks.map((week, wi) => (
               <div key={wi} className="grid grid-cols-7" style={{ borderTop: wi === 0 ? "none" : "1px solid #F0EFE8" }}>
                 {week.map((cell, ci) => {

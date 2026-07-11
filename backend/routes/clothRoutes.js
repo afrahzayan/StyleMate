@@ -12,7 +12,6 @@ const {
   deleteCloth,
 } = require("../controllers/clothController");
 
-// All wardrobe routes require login
 router.post("/", protect, upload.single("image"), addCloth);
 router.get("/", protect, getCloths);
 router.get("/:id", protect, getClothById);

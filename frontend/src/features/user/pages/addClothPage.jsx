@@ -131,7 +131,6 @@ const AddClothPage = () => {
                   Use Camera
                 </button>
 
-                {/* Standard file picker */}
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -139,8 +138,6 @@ const AddClothPage = () => {
                   onChange={handleFileInputChange}
                   className="hidden"
                 />
-                {/* Camera capture — capture="environment" opens the rear camera
-                    directly on supporting mobile browsers */}
                 <input
                   ref={cameraInputRef}
                   type="file"

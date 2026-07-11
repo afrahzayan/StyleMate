@@ -3,7 +3,7 @@ const Cloth = require("../models/clothModel");
 const Outfit = require("../models/outfitModel");
 const { getUpcomingPlans } = require("./plannerService");
 
-const UPCOMING_PLANS_LIMIT = 2; // shown on the Dashboard's "Upcoming Planned Outfits" card
+const UPCOMING_PLANS_LIMIT = 2;
 
 
 const CLOTH_CATEGORIES = ["Top", "Bottom", "Dress", "Hijab", "Foot Wears", "Bags", "Accessories"];
@@ -102,18 +102,10 @@ const getClothStats = async (userId, recentLimit) => {
   };
 };
 
-// Outfits don't have a soft-delete flag on the schema, so this is a
-// straight count of every outfit the user has created.
 const getOutfitCount = async (userId) => {
   return Outfit.countDocuments({ user: userId });
 };
 
-/**
- * Composes the individual stat pieces above into the single payload the
- * dashboard's summary endpoint returns. Kept as its own function (rather
- * than inlined in the controller) so it's reusable if another endpoint
- * ever needs the same data, and so the controller stays a thin HTTP layer.
- */
 const getDashboardSummary = async (userId, options = {}) => {
   const recentLimit = Math.min(
     Math.max(parseInt(options.recentLimit, 10) || DEFAULT_RECENT_LIMIT, 1),

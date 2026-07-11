@@ -11,7 +11,6 @@ const {
   getUpcoming,
 } = require("../controllers/plannerController");
 
-// All planner routes require login and are always scoped to req.userId.
 router.post("/", protect, createPlan);
 router.get("/month", protect, getMonthlyPlans);
 router.get("/upcoming", protect, getUpcoming);

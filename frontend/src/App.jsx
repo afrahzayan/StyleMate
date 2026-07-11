@@ -1,54 +1,43 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 
-// ── Marketing ─────────────────────────────────────────────
 import LandingPage from "./features/marketing/pages/landingPage";
 
-// ── Auth ──────────────────────────────────────────────────
 import LoginPage     from "./features/auth/pages/loginPage";
 import SignupPage    from "./features/auth/pages/signupPage";
 import VerifyOtpPage from "./features/auth/pages/verifyOtpPage";
 
-// ── Dashboard ────────────────────────────────────────────
 import DashboardPage from "./features/user/pages/dashboardPage";
 
-// ── Wardrobe ─────────────────────────────────────────────
 import WardrobePage    from "./features/user/pages/wardrobePage";
 import AddClothPage    from "./features/user/pages/addClothPage";
 import ClothDetailPage from "./features/user/pages/clothDetailsPage";
 
-// ── Outfits ──────────────────────────────────────────────
 import OutfitsPage       from "./features/user/pages/outfitpage";
 import OutfitBuilderPage from "./features/user/pages/outfitBuilderPage";
 
-// ── Planner ──────────────────────────────────────────────
 import PlannerPage from "./features/user/pages/plannerPage";
 
-// ── Favorites ────────────────────────────────────────────
 import FavoritesPage from "./features/user/pages/favoritePage";
 
-// ── Route Guards ───────────────────────────────────────────
+import AiSuggestionsPage from "./features/user/pages/aiSuggestionsPage";
+import AiSuggestionHistoryPage from "./features/user/pages/aiSuggestionHistoryPage";
 
-// Stops logged-in users from going back to /login, /signup, /verify-otp
 const PublicRoute = ({ children }) => {
   const { user } = useSelector((state) => state.auth);
   return user ? <Navigate to="/dashboard" replace /> : children;
 };
 
-// Stops logged-out users from reaching protected pages
 const PrivateRoute = ({ children }) => {
   const { user } = useSelector((state) => state.auth);
   return user ? children : <Navigate to="/login" replace />;
 };
 
-// ── App ────────────────────────────────────────────────────
 const App = () => {
   return (
     <Routes>
-      {/* Public — marketing landing page */}
       <Route path="/" element={<LandingPage />} />
 
-      {/* Public — auth pages (redirect to dashboard if already logged in) */}
       <Route
         path="/login"
         element={
@@ -74,7 +63,6 @@ const App = () => {
         }
       />
 
-      {/* Private — protected user area */}
       <Route
         path="/dashboard"
         element={
@@ -108,7 +96,6 @@ const App = () => {
         }
       />
 
-      {/* Private — outfits */}
       <Route
         path="/outfits"
         element={
@@ -134,7 +121,6 @@ const App = () => {
         }
       />
 
-      {/* Private — planner */}
       <Route
         path="/planner"
         element={
@@ -144,7 +130,6 @@ const App = () => {
         }
       />
 
-      {/* Private — favorites */}
       <Route
         path="/favorites"
         element={
@@ -154,7 +139,23 @@ const App = () => {
         }
       />
 
-      {/* Catch-all — unknown URLs go back to home */}
+      <Route
+        path="/ai-suggestions"
+        element={
+          <PrivateRoute>
+            <AiSuggestionsPage />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/ai-suggestions/history"
+        element={
+          <PrivateRoute>
+            <AiSuggestionHistoryPage />
+          </PrivateRoute>
+        }
+      />
+
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

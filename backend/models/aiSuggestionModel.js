@@ -1,22 +1,26 @@
 const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
-/**
- * Flow:
- * 1. Backend sends a lightweight wardrobe context to Gemini:
- *    [{ id, name, category, color, occasion }]
- * 2. Gemini replies using ONLY the exact ids given, e.g.
- *    { "top": "<clothId>", "bottom": "<clothId>", "tip": "..." }
- * 3. Backend resolves those ids back to full Cloth docs (with
- *    images) for the visual outfit preview.
- * This record stores both what was sent and what came back,
- * so admin "AI Usage" analytics can be built from this collection.
- */
+const aiSuggestionItemSchema = new Schema(
+  {
+    items: [{ type: Schema.Types.ObjectId, ref: "Cloth", required: true }],
+    label: { type: String, default: "" },
+    explanation: { type: String, default: "" },
+    confidence: { type: Number, min: 0, max: 100, default: null },
+    savedAsOutfit: { type: Schema.Types.ObjectId, ref: "Outfit", default: null },
+    isFavorite: { type: Boolean, default: false },
+  },
+  { _id: true }
+);
+
 const aiSuggestionSchema = new Schema(
   {
     user: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
 
     occasion: { type: String, required: true },
+    season: { type: String, default: null },
+    preferredColors: [{ type: String, trim: true }],
+    categories: [{ type: String, trim: true }],
 
     contextItemsSent: [
       {
@@ -28,12 +32,16 @@ const aiSuggestionSchema = new Schema(
 
     rawAiResponse: { type: String },
 
-    suggestedItems: [{ type: Schema.Types.ObjectId, ref: "Cloth" }],
-    fashionTip: { type: String, default: "" },
+    suggestions: [aiSuggestionItemSchema],
 
-    savedAsOutfit: { type: Schema.Types.ObjectId, ref: "Outfit", default: null },
+    status: { type: String, enum: ["success", "failed", "partial"], default: "success" },
+    failureReason: { type: String, default: null },
 
-    status: { type: String, enum: ["success", "failed"], default: "success" },
+    aiMeta: {
+      provider: { type: String, default: "groq" },
+      model: { type: String, default: null },
+      generatedAt: { type: Date, default: Date.now },
+    },
   },
   { timestamps: true }
 );

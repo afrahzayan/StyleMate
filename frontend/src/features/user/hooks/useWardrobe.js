@@ -1,15 +1,10 @@
 import { useState } from "react";
 import axiosInstance from "../../../shared/api/axiosInstance";
 
-// Wardrobe state is per-page (fetched fresh on each visit) rather than
-// global Redux state, since it's list/detail CRUD data rather than
-// app-wide auth state — matches the scope of what's actually shared
-// across the app right now.
 const useWardrobe = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // ── FETCH ALL (optionally filtered) ─────────────────────────
   const fetchCloths = async ({ category, favorite } = {}) => {
     setIsLoading(true);
     setError("");
@@ -28,7 +23,6 @@ const useWardrobe = () => {
     }
   };
 
-  // ── FETCH ONE ────────────────────────────────────────────────
   const fetchClothById = async (id) => {
     setIsLoading(true);
     setError("");
@@ -44,7 +38,6 @@ const useWardrobe = () => {
     }
   };
 
-  // ── ADD (upload image, AI analyzes, auto-saves) ─────────────
   const addCloth = async (imageFile) => {
     setIsLoading(true);
     setError("");
@@ -52,11 +45,6 @@ const useWardrobe = () => {
       const formData = new FormData();
       formData.append("image", imageFile);
 
-      // IMPORTANT: do NOT set Content-Type manually here. FormData needs the
-      // browser to generate the multipart boundary itself; if we set
-      // "multipart/form-data" ourselves, the boundary is missing and the
-      // backend's multer parser fails on every request (this was the bug
-      // causing all uploads to fail with a 500).
       const res = await axiosInstance.post("/cloths", formData);
       return { success: true, cloth: res.data.cloth };
     } catch (err) {
@@ -68,7 +56,6 @@ const useWardrobe = () => {
     }
   };
 
-  // ── UPDATE ───────────────────────────────────────────────────
   const updateCloth = async (id, fields) => {
     setIsLoading(true);
     setError("");
@@ -84,7 +71,6 @@ const useWardrobe = () => {
     }
   };
 
-  // ── TOGGLE FAVORITE ──────────────────────────────────────────
   const toggleFavorite = async (id) => {
     try {
       const res = await axiosInstance.patch(`/cloths/${id}/favorite`);
@@ -94,7 +80,6 @@ const useWardrobe = () => {
     }
   };
 
-  // ── DELETE ───────────────────────────────────────────────────
   const deleteCloth = async (id) => {
     try {
       await axiosInstance.delete(`/cloths/${id}`);
