@@ -33,7 +33,7 @@ const clothSchema = new Schema(
     category: {
       type: String,
       required: true,
-      enum: ["Top", "Bottom", "Dress", "Hijab", "Shoes", "Bags", "Accessories"],
+      enum: ["Top", "Bottom", "Dress", "Hijab", "Foot Wears", "Bags", "Accessories"],
     },
     subCategory: { type: String, default: null, trim: true }, // e.g. "T-Shirt", "Ankle Boots"
 

@@ -15,9 +15,17 @@ const outfitSchema = new Schema(
       },
     ],
 
+    // Extended to cover the occasions the AI Suggestions page offers
+    // (College, Office, Traditional, Travel, Sports) in addition to the
+    // original manual-builder set — kept as one shared enum so an
+    // AI-saved outfit stays filterable/editable everywhere else in the
+    // app (Outfits list filter pills, manual Outfit Builder dropdown).
     occasion: {
       type: String,
-      enum: ["Casual", "Formal", "Party", "Work", "Wedding", "Eid", "Other"],
+      enum: [
+        "Casual", "Formal", "Office", "College", "Wedding", "Party",
+        "Traditional", "Travel", "Sports", "Work", "Eid", "Other",
+      ],
       default: "Casual",
     },
 

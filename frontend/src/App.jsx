@@ -17,6 +17,16 @@ import WardrobePage    from "./features/user/pages/wardrobePage";
 import AddClothPage    from "./features/user/pages/addClothPage";
 import ClothDetailPage from "./features/user/pages/clothDetailsPage";
 
+// ── Outfits ──────────────────────────────────────────────
+import OutfitsPage       from "./features/user/pages/outfitpage";
+import OutfitBuilderPage from "./features/user/pages/outfitBuilderPage";
+
+// ── Planner ──────────────────────────────────────────────
+import PlannerPage from "./features/user/pages/plannerPage";
+
+// ── Favorites ────────────────────────────────────────────
+import FavoritesPage from "./features/user/pages/favoritePage";
+
 // ── Route Guards ───────────────────────────────────────────
 
 // Stops logged-in users from going back to /login, /signup, /verify-otp
@@ -94,6 +104,52 @@ const App = () => {
         element={
           <PrivateRoute>
             <ClothDetailPage />
+          </PrivateRoute>
+        }
+      />
+
+      {/* Private — outfits */}
+      <Route
+        path="/outfits"
+        element={
+          <PrivateRoute>
+            <OutfitsPage />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/outfits/new"
+        element={
+          <PrivateRoute>
+            <OutfitBuilderPage />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/outfits/:id/edit"
+        element={
+          <PrivateRoute>
+            <OutfitBuilderPage />
+          </PrivateRoute>
+        }
+      />
+
+      {/* Private — planner */}
+      <Route
+        path="/planner"
+        element={
+          <PrivateRoute>
+            <PlannerPage />
+          </PrivateRoute>
+        }
+      />
+
+      {/* Private — favorites */}
+      <Route
+        path="/favorites"
+        element={
+          <PrivateRoute>
+            <FavoritesPage />
           </PrivateRoute>
         }
       />

@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { UploadCloud, Camera, X, Sparkles } from "lucide-react";
+import { ArrowLeft, UploadCloud, Camera, X, Sparkles } from "lucide-react";
 import toast from "react-hot-toast";
 import Sidebar from "../../user/components/sidebar";
 import useWardrobe from "../hooks/useWardrobe";
@@ -70,9 +70,15 @@ const AddClothPage = () => {
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <header
-          className="flex items-center justify-between px-7 py-4 bg-white border-b shrink-0"
+          className="flex items-center gap-4 px-7 py-4 bg-white border-b shrink-0"
           style={{ borderColor: "#ede8e0" }}
         >
+          <button
+            onClick={() => navigate(-1)}
+            className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-100 transition-colors shrink-0"
+          >
+            <ArrowLeft size={18} style={{ color: "#1c1c2e" }} />
+          </button>
           <h1 className="font-extrabold text-base" style={{ color: "#1c1c2e" }}>
             Add New Cloth
           </h1>

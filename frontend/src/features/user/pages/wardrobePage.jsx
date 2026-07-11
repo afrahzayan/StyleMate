@@ -1,11 +1,11 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, SlidersHorizontal, Plus, Heart, ImageOff } from "lucide-react";
+import { Search, Plus, Heart, ImageOff } from "lucide-react";
 import toast from "react-hot-toast";
 import Sidebar from "../../user/components/sidebar";
 import useWardrobe from "../hooks/useWardrobe";
 
-const CATEGORY_TABS = ["All", "Top", "Bottom", "Dress", "Hijab", "Shoes", "Bags", "Accessories"];
+const CATEGORY_TABS = ["All", "Top", "Bottom", "Dress", "Hijab", "Foot Wears", "Bags", "Accessories"];
 
 // Display labels differ slightly from the stored enum values (plural, nicer wording)
 const TAB_LABELS = {
@@ -14,7 +14,7 @@ const TAB_LABELS = {
   Bottom: "Bottoms",
   Dress: "Dresses",
   Hijab: "Hijabs",
-  Shoes: "Shoes",
+  "Foot Wears": "Foot Wears",
   Bags: "Bags",
   Accessories: "Accessories",
 };
@@ -28,7 +28,7 @@ const WardrobePage = () => {
   const [search, setSearch] = useState("");
 
   const loadCloths = async (category) => {
-    const result = await fetchCloths(category);
+    const result = await fetchCloths({ category });
     if (result.success) {
       setCloths(result.cloths);
     } else {
@@ -46,6 +46,33 @@ const WardrobePage = () => {
     const q = search.trim().toLowerCase();
     return cloths.filter((c) => c.name?.toLowerCase().includes(q));
   }, [cloths, search]);
+
+  const prevIdsRef = useRef([]);
+  const shuffledMapRef = useRef(new Map());
+
+  const shuffledCloths = useMemo(() => {
+    const ids = visibleCloths.map((c) => c._id);
+    const idsKey = ids.join(",");
+
+    // Only reshuffle when the set of IDs changes (add/remove), not on property changes
+    if (prevIdsRef.current !== idsKey) {
+      prevIdsRef.current = idsKey;
+      shuffledMapRef.current.clear();
+      const indices = [...ids.keys()];
+      for (let i = indices.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [indices[i], indices[j]] = [indices[j], indices[i]];
+      }
+      indices.forEach((shuffledIdx, displayIdx) => {
+        shuffledMapRef.current.set(ids[shuffledIdx], displayIdx);
+      });
+    }
+
+    return [...visibleCloths].sort(
+      (a, b) => (shuffledMapRef.current.get(a._id) ?? 0) - (shuffledMapRef.current.get(b._id) ?? 0)
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visibleCloths]);
 
   const handleToggleFavorite = async (e, id) => {
     e.stopPropagation(); // don't trigger the card's navigate-to-detail click
@@ -94,17 +121,19 @@ const WardrobePage = () => {
               />
             </div>
             <button
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg border text-sm font-medium shrink-0"
-              style={{ borderColor: "#e5e7eb", color: "#374151" }}
+              onClick={() => navigate("/wardrobe/add")}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-semibold hover:opacity-90 shrink-0"
+              style={{ backgroundColor: "#4a5280" }}
             >
-              <SlidersHorizontal size={14} />
-              Filters
+              <Plus size={15} />
+              Add New
             </button>
           </div>
         </header>
 
         {/* ── Body ── */}
         <main className="flex-1 overflow-y-auto px-7 py-6">
+
           {/* Category tabs */}
           <div className="flex items-center gap-2 mb-6 flex-wrap">
             {CATEGORY_TABS.map((tab) => {
@@ -128,29 +157,12 @@ const WardrobePage = () => {
 
           {/* Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
-            {/* Add New Item card */}
-            <button
-              onClick={() => navigate("/wardrobe/add")}
-              className="rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-3 py-10 hover:border-gray-400 transition-colors"
-              style={{ borderColor: "#d1d5db", minHeight: "230px" }}
-            >
-              <div
-                className="w-12 h-12 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: "#f0f2fa" }}
-              >
-                <Plus size={20} style={{ color: "#4a5280" }} />
-              </div>
-              <span className="text-sm font-semibold" style={{ color: "#1c1c2e" }}>
-                Add New Item
-              </span>
-            </button>
-
             {isLoading && cloths.length === 0 ? (
               <div className="col-span-full flex items-center justify-center py-16 text-sm text-gray-400">
                 Loading wardrobe...
               </div>
             ) : (
-              visibleCloths.map((cloth) => (
+              shuffledCloths.map((cloth) => (
                 <div
                   key={cloth._id}
                   onClick={() => navigate(`/wardrobe/${cloth._id}`)}
@@ -194,6 +206,12 @@ const WardrobePage = () => {
             {!isLoading && visibleCloths.length === 0 && cloths.length > 0 && (
               <div className="col-span-full text-center py-10 text-sm text-gray-400">
                 No items match "{search}"
+              </div>
+            )}
+
+            {!isLoading && cloths.length === 0 && (
+              <div className="col-span-full text-center py-16 text-sm text-gray-400">
+                No items in this category yet. Use "Add New Clothes" above to get started.
               </div>
             )}
           </div>

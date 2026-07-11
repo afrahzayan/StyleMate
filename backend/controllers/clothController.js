@@ -114,11 +114,12 @@ const addCloth = async (req, res) => {
 // GET /api/cloths?category=Top&search=white+shirt
 const getCloths = async (req, res) => {
   try {
-    const { category, search } = req.query;
+    const { category, search, favorite } = req.query;
 
     const filter = { user: req.userId, isDeleted: false };
     if (category && category !== "All") filter.category = category;
     if (search) filter.$text = { $search: search };
+    if (favorite === "true") filter.isFavorite = true;
 
     const cloths = await Cloth.find(filter).sort({ createdAt: -1 });
     return res.status(200).json({ cloths });

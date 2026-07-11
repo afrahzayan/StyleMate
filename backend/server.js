@@ -12,7 +12,9 @@ require("./config/redis");
 const authRoutes = require("./routes/authRoutes");
 const userRoute = require("./routes/userRoute");
 const clothRoutes = require("./routes/clothRoutes");
+const outfitRoutes = require("./routes/outfitRoutes");
 const dashboardRoutes = require("./routes/dashboardRoute");
+const plannerRoutes = require("./routes/plannerRoutes");
 
 const app = express();
 
@@ -34,7 +36,9 @@ connectDB();
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoute);
 app.use("/api/cloths", clothRoutes);
+app.use("/api/outfits", outfitRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/planner", plannerRoutes);
 
 app.get("/", (req, res) => {
   res.send("StyleMate API is running");

@@ -10,11 +10,13 @@ const useWardrobe = () => {
   const [error, setError] = useState("");
 
   // ── FETCH ALL (optionally filtered) ─────────────────────────
-  const fetchCloths = async (category) => {
+  const fetchCloths = async ({ category, favorite } = {}) => {
     setIsLoading(true);
     setError("");
     try {
-      const params = category && category !== "All" ? { category } : {};
+      const params = {};
+      if (category && category !== "All") params.category = category;
+      if (favorite) params.favorite = "true";
       const res = await axiosInstance.get("/cloths", { params });
       return { success: true, cloths: res.data.cloths };
     } catch (err) {

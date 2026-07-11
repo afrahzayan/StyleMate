@@ -1,9 +1,12 @@
 const mongoose = require("mongoose");
 const Cloth = require("../models/clothModel");
 const Outfit = require("../models/outfitModel");
+const { getUpcomingPlans } = require("./plannerService");
+
+const UPCOMING_PLANS_LIMIT = 2; // shown on the Dashboard's "Upcoming Planned Outfits" card
 
 
-const CLOTH_CATEGORIES = ["Top", "Bottom", "Dress", "Hijab", "Shoes", "Bags", "Accessories"];
+const CLOTH_CATEGORIES = ["Top", "Bottom", "Dress", "Hijab", "Foot Wears", "Bags", "Accessories"];
 
 const DEFAULT_RECENT_LIMIT = 5;
 const MAX_RECENT_LIMIT = 20;
@@ -117,15 +120,17 @@ const getDashboardSummary = async (userId, options = {}) => {
     MAX_RECENT_LIMIT
   );
 
-  const [clothStats, outfitCount] = await Promise.all([
+  const [clothStats, outfitCount, upcomingPlans] = await Promise.all([
     getClothStats(userId, recentLimit),
     getOutfitCount(userId),
+    getUpcomingPlans(userId, UPCOMING_PLANS_LIMIT),
   ]);
 
   return {
     totalClothes: clothStats.totalClothes,
     favoriteClothesCount: clothStats.favoriteClothes,
     outfitCount,
+    upcomingPlans,
     recentClothes: clothStats.recentClothes,
     categoryStats: clothStats.categoryStats,
     seasonStats: clothStats.seasonStats,

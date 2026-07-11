@@ -6,10 +6,23 @@ import {
   Heart,
   Plus,
   ArrowRight,
-  Sparkles,
+  CalendarDays,
+  Clock,
+  ImageOff,
 } from "lucide-react";
 import Sidebar from "../components/sidebar";
 import useDashboard from "../hooks/useDashboard";
+
+const outfitThumb = (outfit) => outfit?.items?.find((i) => i?.image?.url)?.image?.url || null;
+
+const formatPlanDate = (isoDate) => {
+  const d = new Date(isoDate);
+  return {
+    date: d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+    weekday: d.toLocaleDateString("en-US", { weekday: "long" }),
+    time: d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }),
+  };
+};
 
 const STAT_ITEMS = [
   { label: "CLOTHES",       key: "totalClothes",      icon: Shirt },
@@ -53,23 +66,13 @@ const DashboardPage = () => {
         <main className="flex-1 overflow-y-auto px-7 py-6">
 
           {/* ── Greeting row ── */}
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-xl font-extrabold" style={{ color: "#1c1c2e" }}>
-                Hello, {user?.name?.split(" ")[0] || "there"}!
-              </h2>
-              <p className="text-sm text-gray-500 mt-0.5">
-                Ready to find your perfect look today?
-              </p>
-            </div>
-            <button
-              onClick={() => navigate("/wardrobe/add")}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold hover:opacity-90"
-              style={{ backgroundColor: "#4a5280" }}
-            >
-              <Plus size={15} />
-              Add New Clothes
-            </button>
+          <div className="mb-6">
+            <h2 className="text-xl font-extrabold" style={{ color: "#1c1c2e" }}>
+              Hello, {user?.name?.split(" ")[0] || "there"}!
+            </h2>
+            <p className="text-sm text-gray-500 mt-0.5">
+              Ready to find your perfect look today?
+            </p>
           </div>
 
           {/* ── Stats cards ── */}
@@ -125,7 +128,7 @@ const DashboardPage = () => {
                     style={{ borderColor: "#ede8e0" }}
                   >
                     <div
-                      className="w-full h-20 rounded-lg overflow-hidden bg-cover bg-center"
+                      className="w-full h-36 rounded-lg overflow-hidden bg-cover bg-center"
                       style={{
                         backgroundColor: "#f0f2fa",
                         backgroundImage: item.image?.url ? `url(${item.image.url})` : undefined,
@@ -156,29 +159,76 @@ const DashboardPage = () => {
               </div>
             </div>
 
-            {/* Right: AI Suggestion card */}
+            {/* Right: Upcoming Planned Outfits card */}
             <div
-              className="w-52 shrink-0 rounded-xl p-5 flex flex-col justify-between"
+              className="w-64 shrink-0 rounded-xl p-5 flex flex-col"
               style={{ backgroundColor: "#4a5280" }}
             >
-              <div>
-                <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center mb-4"
-                  style={{ backgroundColor: "#5e6a9a" }}
-                >
-                  <Sparkles size={18} className="text-white" />
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                    style={{ backgroundColor: "#5e6a9a" }}
+                  >
+                    <CalendarDays size={17} className="text-white" />
+                  </div>
+                  <p className="text-white font-bold text-sm">Upcoming Planned Outfits</p>
                 </div>
-                <p className="text-white font-bold text-sm mb-1">AI Suggestions</p>
-                <p className="text-xs leading-relaxed" style={{ color: "#b0b8d8" }}>
-                  Get outfit ideas tailored to your style and today&apos;s occasion.
-                </p>
               </div>
+
+              {isLoading ? (
+                <p className="text-xs" style={{ color: "#b0b8d8" }}>Loading...</p>
+              ) : (dashboard?.upcomingPlans || []).length === 0 ? (
+                <div className="flex-1 flex items-center justify-center text-center py-6">
+                  <p className="text-xs leading-relaxed" style={{ color: "#b0b8d8" }}>
+                    No upcoming planned outfits.
+                  </p>
+                </div>
+              ) : (
+                <div className="flex-1 space-y-2.5">
+                  {dashboard.upcomingPlans.map((plan) => {
+                    const thumb = outfitThumb(plan.outfit);
+                    const { date, weekday, time } = formatPlanDate(plan.date);
+                    return (
+                      <button
+                        key={plan._id}
+                        onClick={() => navigate("/planner")}
+                        className="w-full flex items-center gap-3 rounded-lg p-2 text-left transition-colors hover:bg-white/10"
+                        style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
+                      >
+                        <div
+                          className="w-11 h-11 rounded-lg overflow-hidden shrink-0 flex items-center justify-center"
+                          style={{ backgroundColor: "#5e6a9a" }}
+                        >
+                          {thumb ? (
+                            <img src={thumb} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <ImageOff size={14} className="text-white" />
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-white text-xs font-bold truncate">
+                            {plan.outfit?.name || "Deleted outfit"}
+                          </p>
+                          <p className="text-[11px] flex items-center gap-1" style={{ color: "#b0b8d8" }}>
+                            {date} · {weekday}
+                          </p>
+                          <p className="text-[10px] flex items-center gap-1" style={{ color: "#9aa2c8" }}>
+                            <Clock size={9} /> {time}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
               <button
-                onClick={() => navigate("/ai-suggestions")}
+                onClick={() => navigate("/planner")}
                 className="mt-4 w-full py-2.5 rounded-xl text-sm font-semibold bg-white hover:bg-gray-50 transition-colors"
                 style={{ color: "#4a5280" }}
               >
-                Get Suggestions
+                Open Planner
               </button>
             </div>
           </div>

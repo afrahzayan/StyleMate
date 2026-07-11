@@ -1,1 +1,17 @@
 @import "tailwindcss";
+
+/* ── StyleMate design tokens (Outfits module) ───────────────── */
+:root {
+  --sm-primary: #52557a;
+  --sm-secondary: #d7d8f6;
+  --sm-background: #faf8f2;
+  --sm-card: #ffffff;
+  --sm-border: #e5e7eb;
+  --sm-text-primary: #2f3447;
+  --sm-text-secondary: #7c8197;
+  --sm-success: #22c55e;
+}
+
+body {
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+}

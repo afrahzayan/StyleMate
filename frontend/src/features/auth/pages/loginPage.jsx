@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import useAuth from "../hooks/useAuth";
-import GoogleLoginButton from "../components/googleLoginButton";
 import AuthNavbar from "../components/authNavbar";
 
 const LoginPage = () => {
@@ -114,14 +113,6 @@ const LoginPage = () => {
                 {isLoading ? "Logging in..." : "Login"}
               </button>
             </form>
-
-            <div className="flex items-center gap-3 my-4">
-              <hr className="flex-1" style={{ borderColor: "#e5e7eb" }} />
-              <span className="text-xs text-gray-400 font-medium tracking-wider">OR CONTINUE WITH</span>
-              <hr className="flex-1" style={{ borderColor: "#e5e7eb" }} />
-            </div>
-
-            <GoogleLoginButton />
 
             <p className="text-center text-xs text-gray-500 mt-5">
               Don&apos;t have an account?{" "}

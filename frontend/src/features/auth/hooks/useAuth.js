@@ -85,28 +85,6 @@ const useAuth = () => {
     }
   };
 
-  // ── GOOGLE LOGIN ──────────────────────────────────────────
-  // Sends the Google credential token to our backend for verification
-  const googleLogin = async (googleCredential) => {
-    dispatch(setLoading());
-    try {
-      const res = await axiosInstance.post("/auth/google", {
-        credential: googleCredential,
-      });
-      dispatch(
-        loginSuccess({
-          user: res.data.user,
-          accessToken: res.data.accessToken,
-        })
-      );
-      return { success: true };
-    } catch (err) {
-      const msg = err.response?.data?.message || "Google login failed";
-      dispatch(setError(msg));
-      return { success: false, message: msg };
-    }
-  };
-
   // ── LOGOUT ────────────────────────────────────────────────
   const logout = async () => {
     try {
@@ -125,7 +103,6 @@ const useAuth = () => {
     verifyOtp,
     resendOtp,
     login,
-    googleLogin,
     logout,
   };
 };

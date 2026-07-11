@@ -25,7 +25,7 @@ const GROQ_VISION_MODEL =
 
 // Categories the rest of the app understands — the AI's free-text category
 // guess gets normalized into one of these before saving (see mapCategory).
-const VALID_CATEGORIES = ["Top", "Bottom", "Dress", "Hijab", "Shoes", "Bags", "Accessories"];
+const VALID_CATEGORIES = ["Top", "Bottom", "Dress", "Hijab", "Foot Wears", "Bags", "Accessories"];
 
 const ANALYSIS_PROMPT = `You are a fashion cataloging assistant. Analyze the clothing item in this image and return ONLY a single valid JSON object — no markdown, no code fences, no commentary before or after it.
 
@@ -93,7 +93,7 @@ const mapCategory = (rawCategory) => {
   if (/(jean|trouser|pant|short|skirt|legging|jogger)/.test(c)) return "Bottom";
   if (/(dress|gown|jumpsuit|abaya)/.test(c)) return "Dress";
   if (/(hijab|scarf|shawl)/.test(c)) return "Hijab";
-  if (/(shoe|sneaker|boot|sandal|heel|slipper|flat)/.test(c)) return "Shoes";
+  if (/(shoe|sneaker|boot|sandal|heel|slipper|flat)/.test(c)) return "Foot Wears";
   if (/(bag|handbag|backpack|purse|tote|clutch)/.test(c)) return "Bags";
 
   return VALID_CATEGORIES.includes(rawCategory) ? rawCategory : "Accessories";

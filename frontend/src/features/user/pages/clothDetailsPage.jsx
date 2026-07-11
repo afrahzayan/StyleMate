@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 import Sidebar from "../../user/components/sidebar";
 import useWardrobe from "../hooks/useWardrobe";
 
-const CATEGORY_OPTIONS = ["Top", "Bottom", "Dress", "Hijab", "Shoes", "Bags", "Accessories"];
+const CATEGORY_OPTIONS = ["Top", "Bottom", "Dress", "Hijab", "Foot Wears", "Bags", "Accessories"];
 const GENDER_OPTIONS = ["Men", "Women", "Unisex"];
 const FORMALITY_OPTIONS = ["Formal", "Casual", "Semi-Formal"];
 const CONDITION_OPTIONS = ["New", "Good", "Worn", "Damaged"];
