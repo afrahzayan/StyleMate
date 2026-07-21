@@ -12,7 +12,7 @@ const useWardrobe = () => {
       const params = {};
       if (category && category !== "All") params.category = category;
       if (favorite) params.favorite = "true";
-      const res = await axiosInstance.get("/cloths", { params });
+      const res = await axiosInstance.get("/clothes", { params });
       return { success: true, cloths: res.data.cloths };
     } catch (err) {
       const msg = err.response?.data?.message || "Failed to load wardrobe";
@@ -27,7 +27,7 @@ const useWardrobe = () => {
     setIsLoading(true);
     setError("");
     try {
-      const res = await axiosInstance.get(`/cloths/${id}`);
+      const res = await axiosInstance.get(`/clothes/${id}`);
       return { success: true, cloth: res.data.cloth };
     } catch (err) {
       const msg = err.response?.data?.message || "Failed to load item";
@@ -45,7 +45,7 @@ const useWardrobe = () => {
       const formData = new FormData();
       formData.append("image", imageFile);
 
-      const res = await axiosInstance.post("/cloths", formData);
+      const res = await axiosInstance.post("/clothes", formData);
       return { success: true, cloth: res.data.cloth };
     } catch (err) {
       const msg = err.response?.data?.message || "Failed to add item";
@@ -60,7 +60,7 @@ const useWardrobe = () => {
     setIsLoading(true);
     setError("");
     try {
-      const res = await axiosInstance.patch(`/cloths/${id}`, fields);
+      const res = await axiosInstance.patch(`/clothes/${id}`, fields);
       return { success: true, cloth: res.data.cloth };
     } catch (err) {
       const msg = err.response?.data?.message || "Failed to save changes";
@@ -73,7 +73,7 @@ const useWardrobe = () => {
 
   const toggleFavorite = async (id) => {
     try {
-      const res = await axiosInstance.patch(`/cloths/${id}/favorite`);
+      const res = await axiosInstance.patch(`/clothes/${id}/favorite`);
       return { success: true, cloth: res.data.cloth };
     } catch (err) {
       return { success: false, message: err.response?.data?.message || "Failed to update" };
@@ -82,7 +82,7 @@ const useWardrobe = () => {
 
   const deleteCloth = async (id) => {
     try {
-      await axiosInstance.delete(`/cloths/${id}`);
+      await axiosInstance.delete(`/clothes/${id}`);
       return { success: true };
     } catch (err) {
       return { success: false, message: err.response?.data?.message || "Failed to delete" };

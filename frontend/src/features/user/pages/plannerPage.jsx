@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 import Sidebar from "../components/sidebar";
 import PlanOutfitModal from "../components/planOutfitModal";
 import usePlanner from "../hooks/usePlanner";
-import useOutfits from "../hooks/useOtfits";
+import useOutfits from "../hooks/useOutfits";
 
 const WEEKDAYS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Heart, ImageOff, CalendarPlus, Check, Loader2 } from "lucide-react";
 
+
 const getSlotClasses = (count, index) => {
   if (count === 1) return "col-span-2 row-span-2";
   if (count === 2) return "row-span-2";
@@ -55,39 +56,39 @@ const AiSuggestionCard = ({ entry, batchId, index, onSave, onToggleFavorite, onA
       </div>
 
       <div className="p-2.5">
-        <div
-          className="grid grid-cols-2 grid-rows-2 gap-1.5 rounded-[14px] overflow-hidden"
-          style={{ height: "230px" }}
-        >
-          {items.length === 0 && (
-            <div className="col-span-2 row-span-2 flex items-center justify-center" style={{ backgroundColor: "#F5F4FA" }}>
-              <ImageOff size={26} style={{ color: "#C7C9DC" }} />
-            </div>
-          )}
-          {items.slice(0, shown).map((item, i) => (
-            <div
-              key={item._id || i}
-              className={`relative overflow-hidden ${getSlotClasses(items.length, i)}`}
-              style={{ backgroundColor: "#F5F4FA" }}
-            >
-              {item?.image?.url ? (
-                <img src={item.image.url} alt={item.name || "outfit item"} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <ImageOff size={20} style={{ color: "#C7C9DC" }} />
-                </div>
-              )}
-              {i === shown - 1 && extra > 0 && (
-                <div
-                  className="absolute inset-0 flex items-center justify-center text-white font-semibold text-sm"
-                  style={{ backgroundColor: "rgba(47,52,71,0.55)" }}
-                >
-                  +{extra} more
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+          <div
+            className="grid grid-cols-2 grid-rows-2 gap-1.5 rounded-[14px] overflow-hidden"
+            style={{ height: "230px" }}
+          >
+            {items.length === 0 && (
+              <div className="col-span-2 row-span-2 flex items-center justify-center" style={{ backgroundColor: "#F5F4FA" }}>
+                <ImageOff size={26} style={{ color: "#C7C9DC" }} />
+              </div>
+            )}
+            {items.slice(0, shown).map((item, i) => (
+              <div
+                key={item._id || i}
+                className={`relative overflow-hidden ${getSlotClasses(items.length, i)}`}
+                style={{ backgroundColor: "#F5F4FA" }}
+              >
+                {item?.image?.url ? (
+                  <img src={item.image.url} alt={item.name || "outfit item"} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <ImageOff size={20} style={{ color: "#C7C9DC" }} />
+                  </div>
+                )}
+                {i === shown - 1 && extra > 0 && (
+                  <div
+                    className="absolute inset-0 flex items-center justify-center text-white font-semibold text-sm"
+                    style={{ backgroundColor: "rgba(47,52,71,0.55)" }}
+                  >
+                    +{extra} more
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
       </div>
 
       {entry.explanation && (
@@ -95,6 +96,8 @@ const AiSuggestionCard = ({ entry, batchId, index, onSave, onToggleFavorite, onA
           {entry.explanation}
         </p>
       )}
+
+      
 
       <div className="mt-auto p-4 flex items-center gap-2">
         <button

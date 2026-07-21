@@ -1,67 +1,42 @@
-require("dotenv").config();
-
 const express = require("express");
+const mongoose = require("mongoose");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const morgan = require("morgan");
-const multer = require("multer");
+require("dotenv").config();
 
 const connectDB = require("./config/db");
-require("./config/redis");
 
 const authRoutes = require("./routes/authRoutes");
-const userRoute = require("./routes/userRoute");
+const userRoutes = require("./routes/userRoutes");
 const clothRoutes = require("./routes/clothRoutes");
 const outfitRoutes = require("./routes/outfitRoutes");
-const dashboardRoutes = require("./routes/dashboardRoute");
-const plannerRoutes = require("./routes/plannerRoutes");
 const aiSuggestionRoutes = require("./routes/aiSuggestionRoutes");
+const plannerRoutes = require("./routes/plannerRoutes");
+const dashboardRoutes = require("./routes/dashboardRoutes");
 
 const app = express();
 
+connectDB();
+
+app.use(cors({ origin: process.env.CLIENT_URL || "http://localhost:5173", credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
 app.use(morgan("dev"));
-app.use(
-  cors({
-    origin: "http://localhost:5173",
-    credentials: true,
-  })
-);
-
-connectDB();
 
 app.use("/api/auth", authRoutes);
-app.use("/api/user", userRoute);
-app.use("/api/cloths", clothRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/clothes", clothRoutes);
 app.use("/api/outfits", outfitRoutes);
-app.use("/api/dashboard", dashboardRoutes);
-app.use("/api/planner", plannerRoutes);
 app.use("/api/ai-suggestions", aiSuggestionRoutes);
+app.use("/api/planner", plannerRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
-app.get("/", (req, res) => {
-  res.send("StyleMate API is running");
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok" });
 });
 
-app.use((err, req, res, next) => {
-  if (err instanceof multer.MulterError) {
-    if (err.code === "LIMIT_FILE_SIZE") {
-      return res.status(400).json({ message: "Image must be smaller than 5MB" });
-    }
-    return res.status(400).json({ message: err.message });
-  }
-  if (err && err.message && err.message.includes("Only JPG, PNG")) {
-    return res.status(400).json({ message: err.message });
-  }
-  next(err);
-});
-
-app.use((err, req, res, next) => {
-  console.error(`[${new Date().toISOString()}] Unhandled error on ${req.method} ${req.originalUrl}:`, err);
-  if (res.headersSent) return next(err);
-  res.status(500).json({ message: "Unexpected server error" });
-});
-
-app.listen(process.env.PORT, () => {
-  console.log(`Server is running on port ${process.env.PORT}`);
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });

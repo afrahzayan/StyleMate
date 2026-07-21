@@ -134,6 +134,7 @@ const generateSuggestionsForUser = async (
     if (cleanedOutfits.length === 0) {
       status = "failed";
       failureReason = "The AI didn't return any usable combinations from your wardrobe. Try again or broaden your filters.";
+      console.log("[ai-outfit] cleanedOutfits empty — parsed outfits:", JSON.stringify(parsed?.outfits));
     } else if (cleanedOutfits.length < count) {
       status = "partial";
     }

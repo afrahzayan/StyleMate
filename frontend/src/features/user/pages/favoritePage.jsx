@@ -9,7 +9,7 @@ import FilterPills from "../components/outfit/filterPills";
 import SortMenu from "../components/outfit/sortMenu";
 import FavoriteOutfitCard from "../components/outfit/favOutfitCard";
 import AddToPlannerModal from "../components/addToPlan";
-import useOutfits from "../hooks/useOtfits";
+import useOutfits from "../hooks/useOutfits";
 import useWardrobe from "../hooks/useWardrobe";
 import usePlanner from "../hooks/usePlanner";
 

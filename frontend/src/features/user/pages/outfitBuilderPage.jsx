@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 
 import Sidebar from "../components/sidebar";
 import useWardrobe from "../hooks/useWardrobe";
-import useOutfits from "../hooks/useOtfits";
+import useOutfits from "../hooks/useOutfits";
 
 const TABS = [
   { key: "Top", label: "Top", categories: ["Top", "Dress"] },
