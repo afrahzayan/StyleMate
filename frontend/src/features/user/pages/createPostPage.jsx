@@ -1,13 +1,20 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ImagePlus, X, Sparkles } from "lucide-react";
+import { ArrowLeft, ImagePlus, X, Sparkles, Upload, Heart } from "lucide-react";
 import toast from "react-hot-toast";
 
 import Sidebar from "../../user/components/sidebar";
 import useOutfits from "../../user/hooks/useOutfits";
 import useCommunity from "../hooks/useCommunity";
+import ChooseFavoritePhotoModal from "../components/chooseFavPhotomodal";
 
-const OCCASIONS = ["Casual", "Formal", "Office", "College", "Wedding", "Party", "Traditional", "Travel", "Sports", "Work", "Eid", "Other"];
+const OCCASIONS = [
+  "Casual", "Formal", "Office", "Business Meeting", "College", "School",
+  "Party", "Wedding", "Reception", "Traditional", "Festival", "Eid",
+  "Vacation", "Travel", "Beach", "Date Night", "Family Gathering", "Brunch",
+  "Dinner", "Sports", "Gym", "Shopping", "Outdoor", "Winter", "Summer",
+  "Rainy Day", "Home Wear", "Photoshoot", "Special Event", "Other",
+];
 const STYLES = ["Elegant", "Minimal", "Streetwear", "Classic", "Boho", "Edgy", "Sporty"];
 const SEASONS = ["Spring", "Summer", "Autumn", "Winter", "All Season"];
 
@@ -22,6 +29,7 @@ const CreatePostPage = () => {
   const [title, setTitle] = useState("");
   const [caption, setCaption] = useState("");
   const [occasion, setOccasion] = useState("");
+  const [customOccasion, setCustomOccasion] = useState("");
   const [style, setStyle] = useState("");
   const [season, setSeason] = useState("");
   const [tagInput, setTagInput] = useState("");
@@ -30,12 +38,48 @@ const CreatePostPage = () => {
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
 
+  const [favoriteOutfits, setFavoriteOutfits] = useState([]);
+  const [isLoadingFavorites, setIsLoadingFavorites] = useState(false);
+  const [isFavoriteModalOpen, setIsFavoriteModalOpen] = useState(false);
+  const [isImportingFavorite, setIsImportingFavorite] = useState(false);
+
   useEffect(() => {
     (async () => {
       const result = await fetchOutfits({ sort: "recent" });
       if (result.success) setOutfits(result.outfits);
     })();
   }, []);
+
+  const openFavoriteModal = async () => {
+    setIsFavoriteModalOpen(true);
+    if (favoriteOutfits.length === 0) {
+      setIsLoadingFavorites(true);
+      const result = await fetchOutfits({ favorite: true, sort: "recent" });
+      if (result.success) setFavoriteOutfits(result.outfits);
+      setIsLoadingFavorites(false);
+    }
+  };
+
+  const handleSelectFavoritePhoto = async (outfit) => {
+    const thumbUrl = outfit?.items?.find((i) => i?.image?.url)?.image?.url;
+    if (!thumbUrl) {
+      toast.error("This outfit doesn't have a usable photo");
+      return;
+    }
+    setIsImportingFavorite(true);
+    try {
+      const res = await fetch(thumbUrl);
+      const blob = await res.blob();
+      const file = new File([blob], `${outfit.name || "favorite-outfit"}.jpg`, { type: blob.type || "image/jpeg" });
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+      setIsFavoriteModalOpen(false);
+    } catch (err) {
+      toast.error("Couldn't load that photo, please try again");
+    } finally {
+      setIsImportingFavorite(false);
+    }
+  };
 
   const selectedOutfit = outfits.find((o) => o._id === selectedOutfitId);
 
@@ -68,11 +112,17 @@ const CreatePostPage = () => {
       return;
     }
 
+    if (occasion === "Other" && !customOccasion.trim()) {
+      toast.error("Please type your custom occasion, or pick one from the list");
+      return;
+    }
+    const finalOccasion = occasion === "Other" ? customOccasion.trim() : occasion;
+
     const formData = new FormData();
     formData.append("linkedOutfit", selectedOutfitId);
     formData.append("title", title);
     formData.append("caption", caption);
-    formData.append("occasion", occasion);
+    formData.append("occasion", finalOccasion);
     formData.append("style", style);
     formData.append("season", season);
     formData.append("tags", tags.join(","));
@@ -126,17 +176,28 @@ const CreatePostPage = () => {
                   <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: "#EDEBFA" }}>
                     <ImagePlus size={26} style={{ color: "#52557A" }} />
                   </div>
-                  <p className="text-base font-bold mb-1" style={{ color: "#1c1c2e" }}>Drag & drop outfit image</p>
+                  <p className="text-base font-bold mb-1" style={{ color: "#1c1c2e" }}>Add an outfit photo</p>
                   <p className="text-xs mb-4 max-w-xs" style={{ color: "#7C8197" }}>
                     Optional — leave blank to use your outfit's item photos instead.
                   </p>
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="px-5 py-2.5 rounded-full text-sm font-semibold text-white"
-                    style={{ backgroundColor: "#4a5280" }}
-                  >
-                    Browse files
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold text-white"
+                      style={{ backgroundColor: "#4a5280" }}
+                    >
+                      <Upload size={14} />
+                      Upload from Device
+                    </button>
+                    <button
+                      onClick={openFavoriteModal}
+                      className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold border"
+                      style={{ borderColor: "#E5E7EB", color: "#2F3447" }}
+                    >
+                      <Heart size={14} />
+                      Choose from Favorite Outfits
+                    </button>
+                  </div>
                   <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleFileChange} />
                 </>
               )}
@@ -178,10 +239,24 @@ const CreatePostPage = () => {
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="text-xs font-semibold" style={{ color: "#7C8197" }}>Occasion</label>
-                  <select value={occasion} onChange={(e) => setOccasion(e.target.value)} className="w-full mt-1 px-2 py-2.5 rounded-xl border text-sm outline-none bg-white" style={{ borderColor: "#E5E7EB", color: "#2F3447" }}>
+                  <select
+                    value={occasion}
+                    onChange={(e) => { setOccasion(e.target.value); if (e.target.value !== "Other") setCustomOccasion(""); }}
+                    className="w-full mt-1 px-2 py-2.5 rounded-xl border text-sm outline-none bg-white"
+                    style={{ borderColor: "#E5E7EB", color: "#2F3447" }}
+                  >
                     <option value="">Select</option>
-                    {OCCASIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+                    {OCCASIONS.map((o) => <option key={o} value={o}>{o === "Other" ? "Other (Write your own)" : o}</option>)}
                   </select>
+                  {occasion === "Other" && (
+                    <input
+                      value={customOccasion}
+                      onChange={(e) => setCustomOccasion(e.target.value)}
+                      placeholder="Enter occasion"
+                      className="w-full mt-2 px-3 py-2.5 rounded-xl border text-sm outline-none"
+                      style={{ borderColor: "#E5E7EB", color: "#2F3447" }}
+                    />
+                  )}
                 </div>
                 <div>
                   <label className="text-xs font-semibold" style={{ color: "#7C8197" }}>Style</label>
@@ -270,6 +345,15 @@ const CreatePostPage = () => {
           </div>
         </main>
       </div>
+
+      {isFavoriteModalOpen && (
+        <ChooseFavoritePhotoModal
+          outfits={favoriteOutfits}
+          isLoading={isLoadingFavorites || isImportingFavorite}
+          onClose={() => setIsFavoriteModalOpen(false)}
+          onSelect={handleSelectFavoritePhoto}
+        />
+      )}
     </div>
   );
 };

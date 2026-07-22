@@ -69,7 +69,7 @@ const useAuth = () => {
           accessToken: res.data.accessToken,
         })
       );
-      return { success: true };
+      return { success: true, user: res.data.user };
     } catch (err) {
       const msg = err.response?.data?.message || "Login failed";
       dispatch(setError(msg));

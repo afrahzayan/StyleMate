@@ -13,7 +13,9 @@ const clothRoutes = require("./routes/clothRoutes");
 const outfitRoutes = require("./routes/outfitRoutes");
 const aiSuggestionRoutes = require("./routes/aiSuggestionRoutes");
 const plannerRoutes = require("./routes/plannerRoutes");
+const communityRoutes = require("./routes/communityRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
+const adminRoutes = require("./routes/adminRoute");
 
 const app = express();
 
@@ -30,7 +32,9 @@ app.use("/api/clothes", clothRoutes);
 app.use("/api/outfits", outfitRoutes);
 app.use("/api/ai-suggestions", aiSuggestionRoutes);
 app.use("/api/planner", plannerRoutes);
+app.use("/api/community", communityRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/admin", adminRoutes);
 
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok" });

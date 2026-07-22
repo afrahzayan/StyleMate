@@ -45,7 +45,12 @@ const register = async (req, res) => {
       PENDING_TTL_SECONDS
     );
 
-    await sendOtpEmail(email, otp, PENDING_TTL_MINUTES);
+    try {
+      await sendOtpEmail(email, otp, PENDING_TTL_MINUTES);
+    } catch (emailErr) {
+      console.error("[register] Email send failed, OTP logged to console:", emailErr.message);
+      console.log(`[register] OTP for ${email}: ${otp}`);
+    }
 
     return res.status(201).json({
       message: "OTP sent to your email. Please verify to continue.",
@@ -166,7 +171,12 @@ const resendOtp = async (req, res) => {
       PENDING_TTL_SECONDS
     );
 
-    await sendOtpEmail(email, pending.otp, PENDING_TTL_MINUTES);
+    try {
+      await sendOtpEmail(email, pending.otp, PENDING_TTL_MINUTES);
+    } catch (emailErr) {
+      console.error("[resend-otp] Email send failed, OTP logged to console:", emailErr.message);
+      console.log(`[resend-otp] OTP for ${email}: ${pending.otp}`);
+    }
 
     return res.status(200).json({ message: "OTP resent successfully" });
   } catch (err) {

@@ -19,7 +19,7 @@ const LoginPage = () => {
     if (!email || !password) { setFormError("Please fill in all fields"); return; }
 
     const result = await login(email, password);
-    if (result.success) navigate("/dashboard");
+    if (result.success) navigate(result.user?.role === "admin" ? "/admin" : "/dashboard");
     else setFormError(result.message);
   };
 
