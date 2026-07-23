@@ -22,7 +22,7 @@ const reportSchema = new Schema(
 
     status: {
       type: String,
-      enum: ["new", "reviewing", "high_priority", "critical", "resolved"],
+      enum: ["new", "reviewing", "high_priority", "critical", "resolved", "rejected"],
       default: "new",
     },
 

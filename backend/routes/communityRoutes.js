@@ -18,7 +18,7 @@ const {
   reportPost,
 } = require("../controllers/communityControllerr");
 
-router.post("/", protect, upload.single("image"), createPost);
+router.post("/", upload.single("image"), createPost);
 router.get("/", protect, getPosts);
 router.get("/saved", protect, getSavedPosts);
 router.get("/:id", protect, getPostById);

@@ -83,6 +83,18 @@ const CommunityFeedPage = () => {
     }
   };
 
+  const handleDeletePost = async (post) => {
+    if (!window.confirm("Are you sure you want to delete this post?")) return;
+    const result = await deletePost(post._id);
+    if (result.success) {
+      setPosts((prev) => prev.filter((p) => p._id !== post._id));
+      setActivePost((prev) => (prev && prev._id === post._id ? null : prev));
+      toast.success("Post deleted");
+    } else {
+      toast.error(result.message);
+    }
+  };
+
   return (
     <div className="flex h-screen overflow-hidden" style={{ backgroundColor: "#FAF8F2" }}>
       <Sidebar />
@@ -184,9 +196,11 @@ const CommunityFeedPage = () => {
               <PostCard
                 key={post._id}
                 post={post}
+                currentUserId={user?.id}
                 onOpen={setActivePost}
                 onToggleLike={handleToggleLike}
                 onToggleSave={handleToggleSave}
+                onDelete={handleDeletePost}
                 onShare={setSharePost}
                 onReport={setReportPost}
                 onOpenProfile={(username) => username && navigate(`/community/profile/${username}`)}

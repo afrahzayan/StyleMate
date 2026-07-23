@@ -32,25 +32,29 @@ const createPost = async (req, res) => {
   try {
     const { linkedOutfit, title, caption, occasion, style, season, tags, outfitType } = req.body;
 
-    if (!linkedOutfit) {
-      return res.status(400).json({ message: "Please select one of your outfits to share" });
-    }
-
-    const outfit = await Outfit.findOne({ _id: linkedOutfit, user: req.userId }).populate("items");
-    if (!outfit) {
-      return res.status(400).json({ message: "That outfit wasn't found in your wardrobe" });
-    }
-
     let image;
-    if (req.file) {
+    let outfitName = "";
+
+    if (linkedOutfit) {
+      const outfit = await Outfit.findById(linkedOutfit).populate("items");
+      if (outfit) {
+        outfitName = outfit.name;
+        if (!req.file) {
+          const fallback = outfit.items.find((i) => i?.image?.url);
+          if (fallback) {
+            image = { url: fallback.image.url, publicId: fallback.image.publicId };
+          }
+        }
+      }
+    }
+
+    if (!image && req.file) {
       const { url, publicId } = await uploadBufferToCloudinary(req.file.buffer, { folder: "community" });
       image = { url, publicId };
-    } else {
-      const fallback = outfit.items.find((i) => i?.image?.url);
-      if (!fallback) {
-        return res.status(400).json({ message: "Upload a photo, or pick an outfit that has item images" });
-      }
-      image = { url: fallback.image.url, publicId: fallback.image.publicId };
+    }
+
+    if (!image) {
+      return res.status(400).json({ message: "Please upload an image for your post" });
     }
 
     const parsedTags = Array.isArray(tags)
@@ -60,16 +64,16 @@ const createPost = async (req, res) => {
       : [];
 
     const post = await CommunityPost.create({
-      user: req.userId,
+      user: req.userId || null,
       image,
-      title: (title && title.trim()) || outfit.name,
+      title: (title && title.trim()) || outfitName || "Untitled Post",
       caption: caption || "",
-      occasion: occasion || outfit.occasion || "",
+      occasion: occasion || "",
       style: style || "",
       season: season || "",
       tags: parsedTags,
-      outfitType: outfitType === "ai" || outfit.source === "ai" ? "ai" : "manual",
-      linkedOutfit: outfit._id,
+      outfitType: outfitType === "ai" ? "ai" : "manual",
+      linkedOutfit: linkedOutfit || null,
     });
 
     const populated = await post.populate("user", AUTHOR_FIELDS);

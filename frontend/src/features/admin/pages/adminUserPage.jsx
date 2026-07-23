@@ -54,10 +54,10 @@ const AdminUsersPage = () => {
   };
 
   return (
-    <div className="flex min-h-screen" style={{ backgroundColor: "#faf8f5" }}>
+    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: "#faf8f5" }}>
       <AdminSidebar />
 
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col overflow-hidden">
         <header
           className="flex items-center justify-between px-8 py-5 bg-white border-b shrink-0"
           style={{ borderColor: "#ede8e0" }}

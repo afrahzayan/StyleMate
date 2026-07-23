@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Heart, MessageCircle, Share2, Bookmark, Flag, User, Sparkles } from "lucide-react";
+import { Heart, MessageCircle, Share2, Bookmark, Flag, Trash2, User, Sparkles } from "lucide-react";
 
 const timeAgo = (iso) => {
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -13,8 +13,9 @@ const timeAgo = (iso) => {
   return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 };
 
-const PostCard = ({ post, onOpen, onToggleLike, onToggleSave, onShare, onReport, onOpenProfile }) => {
+const PostCard = ({ post, onOpen, onToggleLike, onToggleSave, onShare, onReport, onOpenProfile, currentUserId, onDelete }) => {
   const author = post.user || {};
+  const isOwner = currentUserId && author._id === currentUserId;
 
   return (
     <motion.div
@@ -47,14 +48,26 @@ const PostCard = ({ post, onOpen, onToggleLike, onToggleSave, onShare, onReport,
           </div>
         </button>
 
-        <button
-          onClick={() => onReport?.(post)}
-          className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
-          style={{ color: "#C7C9DC" }}
-          aria-label="Report post"
-        >
-          <Flag size={14} />
-        </button>
+        <div className="flex items-center gap-1">
+          {isOwner && (
+            <button
+              onClick={() => onDelete?.(post)}
+              className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 hover:bg-red-50"
+              style={{ color: "#C0392B" }}
+              aria-label="Delete post"
+            >
+              <Trash2 size={14} />
+            </button>
+          )}
+          <button
+            onClick={() => onReport?.(post)}
+            className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
+            style={{ color: "#C7C9DC" }}
+            aria-label="Report post"
+          >
+            <Flag size={14} />
+          </button>
+        </div>
       </div>
 
       <div className="relative cursor-pointer" onClick={() => onOpen?.(post)}>

@@ -1,12 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ImagePlus, X, Sparkles, Upload, Heart } from "lucide-react";
+import { ArrowLeft, ImagePlus, X, Sparkles, Upload } from "lucide-react";
 import toast from "react-hot-toast";
 
 import Sidebar from "../../user/components/sidebar";
 import useOutfits from "../../user/hooks/useOutfits";
 import useCommunity from "../hooks/useCommunity";
-import ChooseFavoritePhotoModal from "../components/chooseFavPhotomodal";
 
 const OCCASIONS = [
   "Casual", "Formal", "Office", "Business Meeting", "College", "School",
@@ -38,48 +37,14 @@ const CreatePostPage = () => {
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
 
-  const [favoriteOutfits, setFavoriteOutfits] = useState([]);
-  const [isLoadingFavorites, setIsLoadingFavorites] = useState(false);
-  const [isFavoriteModalOpen, setIsFavoriteModalOpen] = useState(false);
-  const [isImportingFavorite, setIsImportingFavorite] = useState(false);
-
   useEffect(() => {
     (async () => {
-      const result = await fetchOutfits({ sort: "recent" });
-      if (result.success) setOutfits(result.outfits);
+      try {
+        const result = await fetchOutfits({ sort: "recent" });
+        if (result.success) setOutfits(result.outfits);
+      } catch {}
     })();
   }, []);
-
-  const openFavoriteModal = async () => {
-    setIsFavoriteModalOpen(true);
-    if (favoriteOutfits.length === 0) {
-      setIsLoadingFavorites(true);
-      const result = await fetchOutfits({ favorite: true, sort: "recent" });
-      if (result.success) setFavoriteOutfits(result.outfits);
-      setIsLoadingFavorites(false);
-    }
-  };
-
-  const handleSelectFavoritePhoto = async (outfit) => {
-    const thumbUrl = outfit?.items?.find((i) => i?.image?.url)?.image?.url;
-    if (!thumbUrl) {
-      toast.error("This outfit doesn't have a usable photo");
-      return;
-    }
-    setIsImportingFavorite(true);
-    try {
-      const res = await fetch(thumbUrl);
-      const blob = await res.blob();
-      const file = new File([blob], `${outfit.name || "favorite-outfit"}.jpg`, { type: blob.type || "image/jpeg" });
-      setImageFile(file);
-      setImagePreview(URL.createObjectURL(file));
-      setIsFavoriteModalOpen(false);
-    } catch (err) {
-      toast.error("Couldn't load that photo, please try again");
-    } finally {
-      setIsImportingFavorite(false);
-    }
-  };
 
   const selectedOutfit = outfits.find((o) => o._id === selectedOutfitId);
 
@@ -107,8 +72,13 @@ const CreatePostPage = () => {
   const removeTag = (tag) => setTags((prev) => prev.filter((t) => t !== tag));
 
   const handlePublish = async () => {
-    if (!selectedOutfitId) {
-      toast.error("Please select one of your outfits to share");
+    if (!imageFile) {
+      toast.error("Please upload an image for your post");
+      return;
+    }
+
+    if (!title.trim()) {
+      toast.error("Please enter a title for your post");
       return;
     }
 
@@ -119,7 +89,7 @@ const CreatePostPage = () => {
     const finalOccasion = occasion === "Other" ? customOccasion.trim() : occasion;
 
     const formData = new FormData();
-    formData.append("linkedOutfit", selectedOutfitId);
+    if (selectedOutfitId) formData.append("linkedOutfit", selectedOutfitId);
     formData.append("title", title);
     formData.append("caption", caption);
     formData.append("occasion", finalOccasion);
@@ -127,7 +97,7 @@ const CreatePostPage = () => {
     formData.append("season", season);
     formData.append("tags", tags.join(","));
     formData.append("outfitType", outfitType);
-    if (imageFile) formData.append("image", imageFile);
+    formData.append("image", imageFile);
 
     const result = await createPost(formData);
     if (result.success) {
@@ -178,7 +148,7 @@ const CreatePostPage = () => {
                   </div>
                   <p className="text-base font-bold mb-1" style={{ color: "#1c1c2e" }}>Add an outfit photo</p>
                   <p className="text-xs mb-4 max-w-xs" style={{ color: "#7C8197" }}>
-                    Optional — leave blank to use your outfit's item photos instead.
+                    Required — upload a photo to share with the community.
                   </p>
                   <div className="flex items-center gap-3">
                     <button
@@ -189,14 +159,6 @@ const CreatePostPage = () => {
                       <Upload size={14} />
                       Upload from Device
                     </button>
-                    <button
-                      onClick={openFavoriteModal}
-                      className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold border"
-                      style={{ borderColor: "#E5E7EB", color: "#2F3447" }}
-                    >
-                      <Heart size={14} />
-                      Choose from Favorite Outfits
-                    </button>
                   </div>
                   <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleFileChange} />
                 </>
@@ -205,7 +167,7 @@ const CreatePostPage = () => {
 
             <div className="rounded-2xl bg-white p-6 space-y-5" style={{ border: "1px solid #E5E7EB" }}>
               <div>
-                <label className="text-xs font-semibold" style={{ color: "#7C8197" }}>Select Outfit</label>
+                <label className="text-xs font-semibold" style={{ color: "#7C8197" }}>Select Outfit (Optional)</label>
                 <select
                   value={selectedOutfitId}
                   onChange={(e) => setSelectedOutfitId(e.target.value)}
@@ -218,10 +180,21 @@ const CreatePostPage = () => {
                   ))}
                 </select>
                 {outfits.length === 0 && (
-                  <p className="text-xs mt-1" style={{ color: "#C0392B" }}>
-                    You don't have any outfits yet — build one first in Outfit Builder.
+                  <p className="text-xs mt-1" style={{ color: "#7C8197" }}>
+                    No outfits available — you can still share a photo directly.
                   </p>
                 )}
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold" style={{ color: "#7C8197" }}>Title</label>
+                <input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Give your post a title"
+                  className="w-full mt-1 px-3 py-2.5 rounded-xl border text-sm outline-none"
+                  style={{ borderColor: "#E5E7EB", color: "#2F3447" }}
+                />
               </div>
 
               <div>
@@ -345,15 +318,6 @@ const CreatePostPage = () => {
           </div>
         </main>
       </div>
-
-      {isFavoriteModalOpen && (
-        <ChooseFavoritePhotoModal
-          outfits={favoriteOutfits}
-          isLoading={isLoadingFavorites || isImportingFavorite}
-          onClose={() => setIsFavoriteModalOpen(false)}
-          onSelect={handleSelectFavoritePhoto}
-        />
-      )}
     </div>
   );
 };

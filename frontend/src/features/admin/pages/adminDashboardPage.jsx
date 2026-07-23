@@ -1,5 +1,5 @@
 import { useSelector } from "react-redux";
-import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 import { Flag } from "lucide-react";
 import {
   AreaChart,
@@ -68,6 +68,7 @@ const StatCard = ({ label, value, delta, deltaLabel, icon: Icon }) => (
 );
 
 const AdminDashboardPage = () => {
+  const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
   const { data, isLoading, error } = useAdminDashboard();
 
@@ -254,7 +255,7 @@ const AdminDashboardPage = () => {
                     )}
                   </div>
                   <button
-                    onClick={() => toast("Coming soon", { icon: "🛠️" })}
+                    onClick={() => navigate("/admin/reports")}
                     className="text-sm font-semibold"
                     style={{ color: "#2d3358" }}
                   >
@@ -309,7 +310,7 @@ const AdminDashboardPage = () => {
                             </td>
                             <td className="py-3 text-right">
                               <button
-                                onClick={() => toast("Coming soon", { icon: "🛠️" })}
+                                onClick={() => navigate("/admin/reports")}
                                 className="text-xs font-semibold px-3 py-1.5 rounded-lg border"
                                 style={{ borderColor: "#ede8e0", color: "#1c1c2e" }}
                               >

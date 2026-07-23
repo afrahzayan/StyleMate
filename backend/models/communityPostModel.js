@@ -3,7 +3,7 @@ const { Schema } = mongoose;
 
 const communityPostSchema = new Schema(
   {
-    user: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
+    user: { type: Schema.Types.ObjectId, ref: "User", required: false, index: true },
 
     image: {
       url: { type: String, required: true },

@@ -15,8 +15,8 @@ import useAuth from "../../auth/hooks/useAuth";
 const navItems = [
   { label: "Dashboard", icon: LayoutGrid, path: "/admin", enabled: true },
   { label: "Users",     icon: Users,      path: "/admin/users", enabled: true },
-  { label: "Clothes",   icon: Shirt,      path: "/admin/clothes", enabled: false },
-  { label: "Reports",   icon: BarChart2,  path: "/admin/reports", enabled: false },
+  { label: "Clothes",   icon: Shirt,      path: "/admin/clothes", enabled: true },
+  { label: "Reports",   icon: BarChart2,  path: "/admin/reports", enabled: true },
   { label: "AI Usage",  icon: Bot,        path: "/admin/ai-usage", enabled: false },
 ];
 

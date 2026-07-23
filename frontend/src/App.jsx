@@ -30,6 +30,8 @@ import SavedPostsPage      from "./features/user/pages/savePostPage";
 
 import AdminDashboardPage from "./features/admin/pages/adminDashboardPage";
 import AdminUsersPage     from "./features/admin/pages/adminUserPage";
+import AdminClothPage     from "./features/admin/pages/adminClothPage";
+import AdminReportPage    from "./features/admin/pages/adminReportPage";
 
 const PublicRoute = ({ children }) => {
   const { user } = useSelector((state) => state.auth);
@@ -181,11 +183,7 @@ const App = () => {
       />
       <Route
         path="/community/create"
-        element={
-          <PrivateRoute>
-            <CreatePostPage />
-          </PrivateRoute>
-        }
+        element={<CreatePostPage />}
       />
       <Route
         path="/community/profile/:username"
@@ -217,6 +215,22 @@ const App = () => {
         element={
           <AdminRoute>
             <AdminUsersPage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/clothes"
+        element={
+          <AdminRoute>
+            <AdminClothPage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/reports"
+        element={
+          <AdminRoute>
+            <AdminReportPage />
           </AdminRoute>
         }
       />
