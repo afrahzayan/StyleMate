@@ -57,7 +57,11 @@ const AddClothPage = () => {
     setIsAnalyzing(false);
 
     if (result.success) {
-      toast.success("Item added to your wardrobe");
+      if (result.aiWarning) {
+        toast.success(result.aiWarning, { duration: 5000 });
+      } else {
+        toast.success("Item added with AI analysis");
+      }
       navigate(`/wardrobe/${result.cloth._id}`);
     } else {
       toast.error(result.message);

@@ -183,7 +183,11 @@ const App = () => {
       />
       <Route
         path="/community/create"
-        element={<CreatePostPage />}
+        element={
+          <PrivateRoute>
+            <CreatePostPage />
+          </PrivateRoute>
+        }
       />
       <Route
         path="/community/profile/:username"

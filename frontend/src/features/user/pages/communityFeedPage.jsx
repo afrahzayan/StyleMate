@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Search, User, Plus, Sparkles, Bookmark } from "lucide-react";
@@ -34,9 +34,10 @@ const useDebouncedValue = (value, delayMs) => {
 const CommunityFeedPage = () => {
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
-  const { isLoading, fetchPosts, toggleLike, toggleSave, deletePost } = useCommunity();
+  const { fetchPosts, toggleLike, toggleSave, deletePost } = useCommunity();
 
   const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [activeFilter, setActiveFilter] = useState("Latest");
   const [showMine, setShowMine] = useState(false);
   const [search, setSearch] = useState("");
@@ -46,16 +47,31 @@ const CommunityFeedPage = () => {
   const [sharePost, setSharePost] = useState(null);
   const [reportPost, setReportPost] = useState(null);
 
+  const abortRef = useRef(null);
+
+  const handleFilterChange = (filter) => {
+    setActiveFilter(filter);
+    setShowMine(false);
+  };
+
   const loadPosts = useCallback(async () => {
+    if (abortRef.current) abortRef.current.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    setLoading(true);
     const occasion = ["Latest", "Most Liked"].includes(activeFilter) ? "All" : activeFilter;
     const sort = activeFilter === "Most Liked" ? "mostLiked" : "recent";
-    const result = await fetchPosts({ search: debouncedSearch, occasion, sort, mine: showMine });
+    const result = await fetchPosts({ search: debouncedSearch, occasion, sort, mine: showMine, signal: controller.signal });
+    if (abortRef.current !== controller) return;
+    setLoading(false);
     if (result.success) setPosts(result.posts);
-    else toast.error(result.message);
+    else if (result.message) toast.error(result.message);
   }, [activeFilter, showMine, debouncedSearch]);
 
   useEffect(() => {
     loadPosts();
+    return () => { if (abortRef.current) abortRef.current.abort(); };
   }, [loadPosts]);
 
   const handleToggleLike = async (post) => {
@@ -158,7 +174,7 @@ const CommunityFeedPage = () => {
                 <User size={14} />
                 {showMine ? "Showing My Posts" : "Show My Posts"}
               </button>
-              <FilterPills options={FILTERS} active={activeFilter} onChange={setActiveFilter} />
+              <FilterPills options={FILTERS} active={activeFilter} onChange={handleFilterChange} />
             </div>
 
             <button
@@ -171,7 +187,7 @@ const CommunityFeedPage = () => {
             </button>
           </div>
 
-          {!isLoading && posts.length === 0 && (
+          {!loading && posts.length === 0 && (
             <div className="flex flex-col items-center justify-center text-center py-20">
               <div className="w-40 h-40 rounded-3xl flex items-center justify-center mb-6" style={{ backgroundColor: "#F5F4FA" }}>
                 <Sparkles size={32} style={{ color: "#C7C9DC" }} />
@@ -217,6 +233,10 @@ const CommunityFeedPage = () => {
           onClose={() => setActivePost(null)}
           onToggleLike={handleToggleLike}
           onToggleSave={handleToggleSave}
+          onCommentCountChange={(count) => {
+            setActivePost((prev) => prev ? { ...prev, commentsCount: count } : prev);
+            setPosts((prev) => prev.map((p) => (p._id === activePost._id ? { ...p, commentsCount: count } : p)));
+          }}
           onOpenProfile={(username) => {
             setActivePost(null);
             if (username) navigate(`/community/profile/${username}`);

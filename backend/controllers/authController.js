@@ -127,6 +127,9 @@ const verifyOtp = async (req, res) => {
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      secure: process.env.NODE_ENV === "production",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -220,6 +223,9 @@ const login = async (req, res) => {
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      secure: process.env.NODE_ENV === "production",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -277,10 +283,10 @@ const logout = async (req, res) => {
       await redisClient.del(`refreshToken:${decoded.id}`);
     }
 
-    res.clearCookie("refreshToken");
+    res.clearCookie("refreshToken", { path: "/" });
     return res.status(200).json({ message: "Logged out successfully" });
   } catch (err) {
-    res.clearCookie("refreshToken");
+    res.clearCookie("refreshToken", { path: "/" });
     return res.status(200).json({ message: "Logged out successfully" });
   }
 };

@@ -32,10 +32,12 @@ const addCloth = async (req, res) => {
     try {
       aiData = await analyzeClothingImage(url);
       aiMeta.confidenceScores = aiData.confidence || {};
+      aiMeta.analysisFailed = Boolean(aiData?.analysisFailed);
+      aiMeta.failureReason = aiData?.failureReason || null;
       console.log(`[addCloth:${reqId}] AI analysis complete -> category=${aiData.category}, title="${aiData.title}"`);
     } catch (aiErr) {
       console.log(`[addCloth:${reqId}] AI analysis failed:`, aiErr.message);
-      aiMeta.analysisFailed = true;
+      aiMeta.analysisFailed = false;
       aiMeta.failureReason = aiErr.message;
     }
 
@@ -43,7 +45,7 @@ const addCloth = async (req, res) => {
       user: req.userId,
       image: { url, publicId },
 
-      name: aiData?.title?.trim() || "Untitled Item",
+      name: aiData?.title?.trim() || aiData?.name?.trim() || "Untitled Item",
       description: aiData?.description || "",
 
       category: aiData?.category || "Accessories",
@@ -79,7 +81,11 @@ const addCloth = async (req, res) => {
     console.log(`[addCloth:${reqId}] MongoDB document created -> _id=${newCloth._id}`);
     console.log(`[addCloth:${reqId}] Response sent to frontend`);
 
-    return res.status(201).json({ message: "Item added", cloth: newCloth });
+    const response = { message: "Item added", cloth: newCloth };
+    if (aiMeta.analysisFailed) {
+      response.aiWarning = "Image was saved but AI analysis failed. You can edit the item to fix the details.";
+    }
+    return res.status(201).json(response);
   } catch (err) {
     console.log(`[addCloth:${reqId}] Failed:`, err);
 

@@ -160,7 +160,7 @@ const generateSuggestionsForUser = async (
     })),
     status,
     failureReason,
-    aiMeta: { provider: "groq", model: process.env.GROQ_TEXT_MODEL || "llama-3.3-70b-versatile", generatedAt: new Date() },
+    aiMeta: { provider: "groq", model: process.env.GROQ_TEXT_MODEL || "openai/gpt-oss-120b", generatedAt: new Date() },
   });
 
   if (status === "failed") {

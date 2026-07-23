@@ -13,7 +13,7 @@ const timeAgo = (iso) => {
   return `${Math.floor(hrs / 24)}d ago`;
 };
 
-const PostDetailModal = ({ post, currentUserId, onClose, onToggleLike, onToggleSave, onOpenProfile }) => {
+const PostDetailModal = ({ post, currentUserId, onClose, onToggleLike, onToggleSave, onCommentCountChange, onOpenProfile }) => {
   const { fetchComments, addComment, deleteComment } = useCommunity();
   const [comments, setComments] = useState([]);
   const [text, setText] = useState("");
@@ -36,6 +36,7 @@ const PostDetailModal = ({ post, currentUserId, onClose, onToggleLike, onToggleS
     if (result.success) {
       setComments((prev) => [result.comment, ...prev]);
       setText("");
+      if (result.commentsCount !== undefined) onCommentCountChange?.(result.commentsCount);
     } else {
       toast.error(result.message);
     }
@@ -45,6 +46,7 @@ const PostDetailModal = ({ post, currentUserId, onClose, onToggleLike, onToggleS
     const result = await deleteComment(post._id, commentId);
     if (result.success) {
       setComments((prev) => prev.filter((c) => c._id !== commentId));
+      if (result.commentsCount !== undefined) onCommentCountChange?.(result.commentsCount);
     } else {
       toast.error(result.message);
     }

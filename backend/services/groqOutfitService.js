@@ -1,6 +1,6 @@
 const Groq = require("groq-sdk");
 
-const GROQ_TEXT_MODEL = process.env.GROQ_TEXT_MODEL || "llama-3.3-70b-versatile";
+const GROQ_TEXT_MODEL = process.env.GROQ_TEXT_MODEL || "openai/gpt-oss-120b";
 
 let groqClient = null;
 const getClient = () => {
@@ -65,7 +65,7 @@ const generateOutfitSuggestions = async ({
     model: GROQ_TEXT_MODEL,
     messages: [{ role: "user", content: prompt }],
     temperature: 0.4,
-    max_tokens: 2000,
+    max_completion_tokens: 2000,
     response_format: { type: "json_object" },
   });
 
@@ -74,7 +74,8 @@ const generateOutfitSuggestions = async ({
 
   let parsed;
   try {
-    parsed = JSON.parse(raw);
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    parsed = JSON.parse(jsonMatch ? jsonMatch[0] : raw);
   } catch {
     throw new Error("Groq response was not valid JSON");
   }

@@ -46,7 +46,7 @@ const useWardrobe = () => {
       formData.append("image", imageFile);
 
       const res = await axiosInstance.post("/clothes", formData);
-      return { success: true, cloth: res.data.cloth };
+      return { success: true, cloth: res.data.cloth, aiWarning: res.data.aiWarning || null };
     } catch (err) {
       const msg = err.response?.data?.message || "Failed to add item";
       setError(msg);

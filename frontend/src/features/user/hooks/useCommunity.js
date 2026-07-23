@@ -5,7 +5,7 @@ const useCommunity = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const fetchPosts = async ({ search, occasion, sort, mine } = {}) => {
+  const fetchPosts = async ({ search, occasion, sort, mine, signal } = {}) => {
     setIsLoading(true);
     setError("");
     try {
@@ -14,9 +14,12 @@ const useCommunity = () => {
       if (occasion && occasion !== "All") params.occasion = occasion;
       if (sort) params.sort = sort;
       if (mine) params.mine = "true";
-      const res = await axiosInstance.get("/community", { params });
+      const res = await axiosInstance.get("/community", { params, signal });
       return { success: true, posts: res.data.posts };
     } catch (err) {
+      if (err.name === "CanceledError" || err.code === "ERR_CANCELED") {
+        return { success: false, message: "" };
+      }
       const msg = err.response?.data?.message || "Failed to load the community feed";
       setError(msg);
       return { success: false, message: msg };
@@ -102,7 +105,7 @@ const useCommunity = () => {
   const addComment = async (id, text) => {
     try {
       const res = await axiosInstance.post(`/community/${id}/comments`, { text });
-      return { success: true, comment: res.data.comment };
+      return { success: true, comment: res.data.comment, commentsCount: res.data.commentsCount };
     } catch (err) {
       return { success: false, message: err.response?.data?.message || "Failed to add comment" };
     }
@@ -110,8 +113,8 @@ const useCommunity = () => {
 
   const deleteComment = async (id, commentId) => {
     try {
-      await axiosInstance.delete(`/community/${id}/comments/${commentId}`);
-      return { success: true };
+      const res = await axiosInstance.delete(`/community/${id}/comments/${commentId}`);
+      return { success: true, commentsCount: res.data.commentsCount };
     } catch (err) {
       return { success: false, message: err.response?.data?.message || "Failed to delete comment" };
     }

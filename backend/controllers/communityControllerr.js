@@ -270,9 +270,11 @@ const addComment = async (req, res) => {
     if (!post) return res.status(404).json({ message: "Post not found" });
 
     const comment = await Comment.create({ post: post._id, user: req.userId, text: text.trim() });
+    post.commentsCount += 1;
+    await post.save();
     const populated = await comment.populate("user", AUTHOR_FIELDS);
 
-    return res.status(201).json({ message: "Comment added", comment: populated });
+    return res.status(201).json({ message: "Comment added", comment: populated, commentsCount: post.commentsCount });
   } catch (err) {
     console.log(err);
     return res.status(500).json({ message: "Something went wrong" });
@@ -287,7 +289,14 @@ const deleteComment = async (req, res) => {
       user: req.userId,
     });
     if (!comment) return res.status(404).json({ message: "Comment not found" });
-    return res.status(200).json({ message: "Comment deleted" });
+
+    const post = await CommunityPost.findByIdAndUpdate(
+      req.params.id,
+      { $inc: { commentsCount: -1 } },
+      { new: true }
+    );
+
+    return res.status(200).json({ message: "Comment deleted", commentsCount: post?.commentsCount ?? 0 });
   } catch (err) {
     console.log(err);
     return res.status(500).json({ message: "Something went wrong" });
@@ -302,7 +311,7 @@ const reportPost = async (req, res) => {
     const post = await CommunityPost.findOne({ _id: req.params.id, status: "visible" });
     if (!post) return res.status(404).json({ message: "Post not found" });
 
-    if (post.user.toString() === req.userId) {
+    if (post.user && post.user.toString() === req.userId) {
       return res.status(400).json({ message: "You can't report your own post" });
     }
 
