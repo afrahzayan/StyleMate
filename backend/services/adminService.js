@@ -5,6 +5,7 @@ const AiSuggestion = require("../models/aiSuggestionModel");
 const Report = require("../models/reportModel");
 const CommunityPost = require("../models/communityPostModel");
 const Comment = require("../models/commentModel");
+const { createNotification } = require("./notificationService");
 
 const ACTIVITY_WINDOW_DAYS = 30;
 const RECENT_REPORTS_LIMIT = 4;
@@ -491,20 +492,46 @@ const deleteReportedContent = async (reportId, adminId) => {
   const report = await Report.findById(reportId);
   if (!report) return { success: false, code: 404, message: "Report not found" };
 
+  let ownerId = null;
+  let contentLabel = "content";
+
   if (report.targetType === "CommunityPost") {
-    await CommunityPost.findByIdAndUpdate(report.targetId, { status: "removed" });
+    const post = await CommunityPost.findByIdAndUpdate(report.targetId, { status: "removed" });
+    ownerId = post?.user || null;
+    contentLabel = "community post";
   } else if (report.targetType === "Cloth") {
-    await Cloth.findByIdAndUpdate(report.targetId, { isDeleted: true });
+    const cloth = await Cloth.findByIdAndUpdate(report.targetId, { isDeleted: true });
+    ownerId = cloth?.user || null;
+    contentLabel = "wardrobe item";
   } else if (report.targetType === "Comment") {
     // Comments have no soft-delete field anywhere in the app, so this
     // matches the existing hard-delete behaviour used elsewhere for comments.
-    await Comment.findByIdAndDelete(report.targetId);
+    const comment = await Comment.findByIdAndDelete(report.targetId);
+    ownerId = comment?.user || null;
+    contentLabel = "comment";
   }
 
   report.status = "resolved";
   report.resolvedBy = adminId;
   report.resolutionNote = report.resolutionNote || "Content removed by admin";
   await report.save();
+
+  if (ownerId) {
+    try {
+      await createNotification({
+        userId: ownerId,
+        type: "report_content_removed",
+        title: "Your content was removed",
+        message: `Your ${contentLabel} was removed by an admin for violating community guidelines${
+          report.category ? ` (reason: ${report.category})` : ""
+        }.`,
+        relatedType: report.targetType,
+        relatedId: report.targetId,
+      });
+    } catch (notifyErr) {
+      console.log("Failed to notify user of content removal:", notifyErr.message);
+    }
+  }
 
   return { success: true, report };
 };

@@ -161,4 +161,69 @@ const sendOtpEmail = async (toEmail, otp, expiryMinutes = 5) => {
   });
 };
 
+const buildNotificationEmailHtml = (name, title, message) => {
+  return `<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${title}</title>
+</head>
+<body style="margin:0; padding:0; background-color:${BRAND.bg}; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${BRAND.bg};">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:480px; width:100%;">
+          <tr>
+            <td align="center" style="padding-bottom:24px;">
+              <span style="font-size:22px; font-weight:800; color:${BRAND.textDark}; letter-spacing:-0.3px;">StyleMate</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color:${BRAND.card}; border:1px solid ${BRAND.border}; border-radius:16px; overflow:hidden;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="height:6px; background-image:linear-gradient(90deg, ${BRAND.secondary} 0%, ${BRAND.primary} 100%); font-size:0; line-height:0;">&nbsp;</td>
+                </tr>
+              </table>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="padding:36px 32px;">
+                    <h1 style="margin:0 0 12px 0; text-align:center; font-size:20px; line-height:26px; font-weight:800; color:${BRAND.textDark};">
+                      ${title}
+                    </h1>
+                    <p style="margin:0; text-align:center; font-size:14px; line-height:22px; color:${BRAND.textBody};">
+                      Hi ${name || "there"}, ${message}
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td align="center" style="padding:24px 16px 8px 16px;">
+              <p style="margin:0; font-size:11px; color:${BRAND.textMuted};">
+                © ${new Date().getFullYear()} StyleMate Digital Boutique. All rights reserved.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+};
+
+const sendNotificationEmail = async (toEmail, name, title, message) => {
+  await transporter.sendMail({
+    from: `"StyleMate" <${process.env.EMAIL_USER}>`,
+    to: toEmail,
+    subject: title,
+    html: buildNotificationEmailHtml(name, title, message),
+    text: `Hi ${name || "there"}, ${message}`,
+  });
+};
+
 module.exports = sendOtpEmail;
+module.exports.sendNotificationEmail = sendNotificationEmail;

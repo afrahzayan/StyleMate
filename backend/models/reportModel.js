@@ -4,7 +4,7 @@ const { Schema } = mongoose;
 const reportSchema = new Schema(
   {
     reportedBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    reportedUser: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    reportedUser: { type: Schema.Types.ObjectId, ref: "User", default: null },
 
     targetType: {
       type: String,

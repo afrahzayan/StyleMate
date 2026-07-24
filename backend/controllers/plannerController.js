@@ -7,6 +7,7 @@ const {
   getPlansInRange,
   getUpcomingPlans: fetchUpcomingPlans,
 } = require("../services/plannerService");
+const { scheduleReminders, cancelReminders } = require("../services/reminderScheduler");
 
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
@@ -62,6 +63,14 @@ const createPlan = async (req, res) => {
       { user: req.userId, outfit: outfitId, date: planDate, note: notes || "" },
       { upsert: true, new: true, runValidators: true, setDefaultsOnInsert: true }
     ).populate(OUTFIT_PREVIEW_POPULATE);
+
+    try {
+      await scheduleReminders(plan);
+    } catch (reminderErr) {
+      // Don't fail the request just because reminder scheduling failed
+      // (e.g. Redis briefly unavailable) — the plan itself was saved fine.
+      console.log("Failed to schedule reminders:", reminderErr.message);
+    }
 
     return res.status(200).json({ message: "Outfit planned", plan });
   } catch (err) {
@@ -133,6 +142,13 @@ const updatePlan = async (req, res) => {
 
     await plan.save();
     const populated = await plan.populate(OUTFIT_PREVIEW_POPULATE);
+
+    try {
+      await scheduleReminders(populated);
+    } catch (reminderErr) {
+      console.log("Failed to reschedule reminders:", reminderErr.message);
+    }
+
     return res.status(200).json({ message: "Plan updated", plan: populated });
   } catch (err) {
     console.log(err);
@@ -147,6 +163,13 @@ const deletePlan = async (req, res) => {
   try {
     const plan = await Planner.findOneAndDelete({ _id: req.params.id, user: req.userId });
     if (!plan) return res.status(404).json({ message: "Planned outfit not found" });
+
+    try {
+      await cancelReminders(plan._id);
+    } catch (reminderErr) {
+      console.log("Failed to cancel reminders:", reminderErr.message);
+    }
+
     return res.status(200).json({ message: "Plan removed" });
   } catch (err) {
     console.log(err);

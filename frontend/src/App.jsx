@@ -33,6 +33,8 @@ import AdminUsersPage     from "./features/admin/pages/adminUserPage";
 import AdminClothPage     from "./features/admin/pages/adminClothPage";
 import AdminReportPage    from "./features/admin/pages/adminReportPage";
 
+import NotificationBell from "./features/notifications/components/notificationBell";
+
 const PublicRoute = ({ children }) => {
   const { user } = useSelector((state) => state.auth);
   if (!user) return children;
@@ -51,8 +53,12 @@ const AdminRoute = ({ children }) => {
 };
 
 const App = () => {
+  const { user } = useSelector((state) => state.auth);
+
   return (
-    <Routes>
+    <>
+      {user && <NotificationBell />}
+      <Routes>
       <Route path="/" element={<LandingPage />} />
 
       <Route
@@ -240,7 +246,8 @@ const App = () => {
       />
 
       <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+      </Routes>
+    </>
   );
 };
 

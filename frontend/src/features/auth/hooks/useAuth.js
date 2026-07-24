@@ -1,5 +1,6 @@
 import { useDispatch, useSelector } from "react-redux";
 import axiosInstance from "../../../shared/api/axiosInstance";
+import { disconnectSocket } from "../../../shared/socket/socket";
 import {
   setLoading,
   stopLoading,
@@ -82,6 +83,7 @@ const useAuth = () => {
       await axiosInstance.post("/auth/logout");
     } catch (_) {
     }
+    disconnectSocket();
     dispatch(logoutSuccess());
   };
 
