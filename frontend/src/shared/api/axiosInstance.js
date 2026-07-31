@@ -1,4 +1,6 @@
 import axios from "axios";
+import { dispatch } from "../../app/store";
+import { tokenRefreshed } from "../../features/auth/store/authSlice";
 
 const axiosInstance = axios.create({
   baseURL: "http://localhost:3000/api",
@@ -65,6 +67,7 @@ const ensureFreshAccessToken = async () => {
   try {
     const { data } = await refreshClient.post("/auth/refresh-token");
     localStorage.setItem("accessToken", data.accessToken);
+    dispatch(tokenRefreshed(data.accessToken));
     processQueue(null, data.accessToken);
     return data.accessToken;
   } catch (err) {
@@ -127,6 +130,7 @@ axiosInstance.interceptors.response.use(
       const newToken = data.accessToken;
 
       localStorage.setItem("accessToken", newToken);
+      dispatch(tokenRefreshed(newToken));
       originalRequest.headers.Authorization = `Bearer ${newToken}`;
 
       processQueue(null, newToken);

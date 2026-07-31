@@ -10,6 +10,13 @@ const connectDB = require("./config/db");
 const { initSocket } = require("./config/socket");
 const initReminderWorker = require("./workers/reminderWorker");
 
+const designRoutes = require("./routes/store/designRoutes");
+const reviewRoutes = require("./routes/store/reviewRoutes");
+const customizationOptionRoutes = require("./routes/store/customizationOptionRoutes");
+const priceRoutes = require("./routes/store/priceRoutes");
+const aiRecommendationRoutes = require("./routes/store/aiRecommendationRoutes");
+const myDesignRoutes = require("./routes/store/myDesignRoutes");
+const layerAssetRoutes = require("./routes/store/layerAssetRoutes");
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const clothRoutes = require("./routes/clothRoutes");
@@ -46,6 +53,13 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
+app.use("/api/store", designRoutes);
+app.use("/api/store/reviews", reviewRoutes);
+app.use("/api/customization", customizationOptionRoutes);
+app.use("/api/customization", priceRoutes);
+app.use("/api/customization", aiRecommendationRoutes);
+app.use("/api/customization/my-designs", myDesignRoutes);
+app.use("/api/customization/layer-assets", layerAssetRoutes);
 // Socket.io must be attached to the http server (not the express app)
 // so it can share the same port and upgrade HTTP connections to websockets.
 initSocket(httpServer);

@@ -46,6 +46,11 @@ const authSlice = createSlice({
     clearError(state) {
       state.error = null;
     },
+
+    tokenRefreshed(state, action) {
+      state.accessToken = action.payload;
+      localStorage.setItem("accessToken", action.payload);
+    },
   },
 });
 
@@ -56,6 +61,7 @@ export const {
   setError,
   logoutSuccess,
   clearError,
+  tokenRefreshed,
 } = authSlice.actions;
 
 export default authSlice.reducer;

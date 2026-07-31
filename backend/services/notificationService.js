@@ -17,7 +17,8 @@ const createNotification = async ({ userId, type, title, message, relatedType = 
   });
 
   try {
-    getIO().to(`user:${userId}`).emit("notification:new", notification);
+    const plain = notification.toObject({ versionKey: false });
+    getIO().to(`user:${userId}`).emit("notification:new", plain);
   } catch (err) {
     // Socket not initialized or user not connected — the notification is
     // still saved in the DB, so this is not a failure condition.

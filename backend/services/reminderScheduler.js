@@ -25,6 +25,7 @@ const buildReminderDate = (eventDate, kind) => {
  * Safe to call even if none exist.
  */
 const cancelReminders = async (planId) => {
+  if (!reminderQueue) return;
   const ids = [buildJobId(planId, "dayBefore"), buildJobId(planId, "morningOf")];
   await Promise.all(
     ids.map(async (jobId) => {
@@ -40,6 +41,7 @@ const cancelReminders = async (planId) => {
  * it's safe to call repeatedly / on every save).
  */
 const scheduleReminders = async (plan) => {
+  if (!reminderQueue) return;
   await cancelReminders(plan._id);
 
   const now = Date.now();

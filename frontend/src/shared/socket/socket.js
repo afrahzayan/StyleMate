@@ -13,11 +13,12 @@ let socket = null;
 export const connectSocket = (token) => {
   if (!token) return null;
 
-  if (socket && socket.connected && socket.auth?.token === token) {
+  if (socket && socket.auth?.token === token) {
     return socket;
   }
 
   if (socket) {
+    socket.removeAllListeners();
     socket.disconnect();
   }
 
@@ -26,6 +27,8 @@ export const connectSocket = (token) => {
     withCredentials: true,
     autoConnect: true,
     reconnection: true,
+    reconnectionAttempts: 10,
+    reconnectionDelay: 1000,
   });
 
   return socket;

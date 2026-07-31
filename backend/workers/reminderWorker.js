@@ -24,6 +24,11 @@ const buildContent = (kind, outfitName, dateStr) => {
 };
 
 const initReminderWorker = () => {
+  if (!connection) {
+    console.log("Reminder worker skipped — no Redis connection available.");
+    return null;
+  }
+
   const worker = new Worker(
     REMINDER_QUEUE_NAME,
     async (job) => {
