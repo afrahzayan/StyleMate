@@ -35,9 +35,22 @@ export const buildLayerPublicId = (group, value) => {
 
 const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
 
+// Bump this (in frontend/.env) any time you delete or replace a layer image
+// in Cloudinary, then restart the dev server. It's appended to every layer
+// URL as a query param, so a version bump changes the *entire* URL string —
+// which means the browser can no longer serve a stale cached copy of the
+// old asset, and it's also a brand-new cache key at Cloudinary's CDN edge,
+// so a stale edge-cached copy can't be served either. This is a coarse,
+// global cache-bust (every layer image re-fetches, not just the one you
+// changed) rather than a per-asset one — deliberately, since a per-asset
+// version would need a backend round-trip per layer, which breaks the
+// "fully deterministic from (group, value), no API call" design this file
+// is built around.
+const ASSET_VERSION = import.meta.env.VITE_CLOUDINARY_ASSET_VERSION || "1";
+
 export const buildLayerUrl = (publicId, { width = 800 } = {}) => {
   if (!publicId || !CLOUD_NAME) return null;
-  return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/f_auto,q_auto,c_limit,w_${width},fl_progressive/${publicId}.png`;
+  return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/f_auto,q_auto,c_limit,w_${width},fl_progressive/${publicId}.png?v=${ASSET_VERSION}`;
 };
 
 // Rough hue per common color word, used only so the placeholder swatch (and
