@@ -30,7 +30,6 @@ const ROOT_FOLDER = "StyleMate/custom-design";
 
 const LAYER_FOLDERS = {
   base: "base",
-  color: "colors",
   fabric: "fabrics",
   sleeveType: "sleeves",
   neckType: "necks",

@@ -7,7 +7,6 @@ const ROOT_FOLDER = "StyleMate/custom-design";
 
 const LAYER_FOLDERS = {
   base: "base",
-  color: "colors",
   fabric: "fabrics",
   sleeveType: "sleeves",
   neckType: "necks",
@@ -28,6 +27,7 @@ export const slugify = (value = "") =>
     .replace(/(^-|-$)/g, "");
 
 export const buildLayerPublicId = (group, value) => {
+  if (group === "color") return null;
   const folder = LAYER_FOLDERS[group];
   if (!folder || !value) return null;
   return `${ROOT_FOLDER}/${folder}/${slugify(value)}`;
@@ -35,22 +35,42 @@ export const buildLayerPublicId = (group, value) => {
 
 const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
 
-// Bump this (in frontend/.env) any time you delete or replace a layer image
-// in Cloudinary, then restart the dev server. It's appended to every layer
-// URL as a query param, so a version bump changes the *entire* URL string —
-// which means the browser can no longer serve a stale cached copy of the
-// old asset, and it's also a brand-new cache key at Cloudinary's CDN edge,
-// so a stale edge-cached copy can't be served either. This is a coarse,
-// global cache-bust (every layer image re-fetches, not just the one you
-// changed) rather than a per-asset one — deliberately, since a per-asset
-// version would need a backend round-trip per layer, which breaks the
-// "fully deterministic from (group, value), no API call" design this file
-// is built around.
 const ASSET_VERSION = import.meta.env.VITE_CLOUDINARY_ASSET_VERSION || "1";
 
 export const buildLayerUrl = (publicId, { width = 800 } = {}) => {
   if (!publicId || !CLOUD_NAME) return null;
-  return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/f_auto,q_auto,c_limit,w_${width},fl_progressive/${publicId}.png?v=${ASSET_VERSION}`;
+  // Dynamic cache-buster timestamp ensures deleted Cloudinary images fail immediately with 404
+  // rather than returning stale cached images from browser memory/disk cache.
+  const cb = Date.now();
+  return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/f_auto,q_auto,c_limit,w_${width},fl_progressive/${publicId}.png?v=${ASSET_VERSION}&cb=${cb}`;
+};
+
+/**
+ * Builds predictable Cloudinary public_id for final 1500x1500px composite images:
+ * StyleMate/custom-design/final/<clothingTypeSlug>/<combinationSlug>.png
+ */
+export const buildFinalImagePublicId = (selections = {}) => {
+  const type = slugify(selections.clothingType || "garment");
+  const parts = [];
+
+  if (selections.color) parts.push(slugify(selections.color));
+  if (selections.fabric) parts.push(slugify(selections.fabric));
+  if (selections.sleeveType && selections.sleeveType !== "Sleeveless") parts.push(slugify(selections.sleeveType));
+  if (selections.neckType) parts.push(slugify(selections.neckType));
+  if (selections.length) parts.push(slugify(selections.length));
+  if (selections.pattern && selections.pattern !== "Plain") parts.push(slugify(selections.pattern));
+  if (selections.embroidery && selections.embroidery !== "None") parts.push(slugify(selections.embroidery));
+  if (selections.threadWork && selections.threadWork !== "None") parts.push(slugify(selections.threadWork));
+  if (selections.stoneWork && selections.stoneWork !== "None") parts.push(slugify(selections.stoneWork));
+
+  const filename = parts.length > 0 ? parts.join("-") : "default";
+  return `StyleMate/custom-design/final/${type}/${filename}`;
+};
+
+export const buildFinalImageUrl = (publicId, { width = 1500 } = {}) => {
+  if (!publicId || !CLOUD_NAME) return null;
+  const cb = Date.now();
+  return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/f_auto,q_auto,c_limit,w_${width},fl_progressive/${publicId}.png?v=${ASSET_VERSION}&cb=${cb}`;
 };
 
 // Rough hue per common color word, used only so the placeholder swatch (and

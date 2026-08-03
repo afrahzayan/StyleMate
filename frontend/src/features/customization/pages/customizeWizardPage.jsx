@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { ArrowLeft, CheckCircle2, Bookmark, Send } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Bookmark, Send, Sparkles } from "lucide-react";
 import Sidebar from "../../user/components/sidebar";
 import useCustomizationWizard from "../hooks/useCustomizationWizard";
 import useLivePrice from "../hooks/useLivePrice";
@@ -11,6 +11,7 @@ import OptionStep from "../components/questionnaire/optionStep";
 import MannequinCanvas from "../components/mannequin/mannequinCanvas";
 import PriceBreakdownPanel from "../components/priceBreakeDownPanel";
 import DesignStudioPanel from "../components/designStudioPanel";
+import FinishReviewModal from "../components/finishReviewModal";
 import { resolveLayers } from "../components/mannequin/layerRegistry";
 
 const QUIZ_STEPS = [
@@ -28,6 +29,7 @@ const CustomizeWizardPage = () => {
   const { state, setOption, setMeasurement, setNotes, nextStep, prevStep } = useCustomizationWizard();
   const { saveDesign, submitDesignRequest, isLoading: isSaving } = useMyDesigns();
   const [phase, setPhase] = useState("quiz"); // "quiz" | "studio"
+  const [isReviewOpen, setIsReviewOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [savedDesignId, setSavedDesignId] = useState(null);
   const [saveMessage, setSaveMessage] = useState("");
@@ -45,13 +47,14 @@ const CustomizeWizardPage = () => {
     }
   };
 
-  const handleSaveDesign = async () => {
+  const handleSaveDesign = async (customTitle) => {
     setSaveMessage("");
+    const designTitle = customTitle || title.trim() || `${state.selections.clothingType || "Custom"} Design`;
     const [previewLayer] = resolveLayers(state.selections);
     const result = await saveDesign({
-      title: title.trim() || `${state.selections.clothingType || "Custom"} Design`,
+      title: designTitle,
       previewImage: {
-        url: previewLayer?.src || previewLayer?.fallbackSrc || "",
+        url: previewLayer?.src || "",
         publicId: `${state.selections.clothingType || "design"}-preview`,
       },
       clothingType: state.selections.clothingType,
@@ -100,21 +103,34 @@ const CustomizeWizardPage = () => {
             </div>
           </div>
 
-          <button
-            onClick={() => navigate("/profile")}
-            className="flex items-center gap-2 text-gray-700 hover:opacity-80 transition-opacity"
-          >
-            <div
-              className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
-              style={{ backgroundColor: "#4a5280" }}
+          <div className="flex items-center gap-3">
+            {phase === "studio" && (
+              <button
+                onClick={() => setIsReviewOpen(true)}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-extrabold text-white shadow-md transition-all hover:opacity-90"
+                style={{ backgroundColor: "#1c1c2e" }}
+              >
+                <Sparkles size={14} className="text-amber-400" />
+                Finish & Review
+              </button>
+            )}
+
+            <button
+              onClick={() => navigate("/profile")}
+              className="flex items-center gap-2 text-gray-700 hover:opacity-80 transition-opacity"
             >
-              {user?.profileImage?.url ? (
-                <img src={user.profileImage.url} alt="Profile" className="w-full h-full rounded-full object-cover" />
-              ) : (
-                user?.name?.charAt(0)?.toUpperCase() || "U"
-              )}
-            </div>
-          </button>
+              <div
+                className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
+                style={{ backgroundColor: "#4a5280" }}
+              >
+                {user?.profileImage?.url ? (
+                  <img src={user.profileImage.url} alt="Profile" className="w-full h-full rounded-full object-cover" />
+                ) : (
+                  user?.name?.charAt(0)?.toUpperCase() || "U"
+                )}
+              </div>
+            </button>
+          </div>
         </header>
 
         {/* Content Body */}
@@ -175,7 +191,7 @@ const CustomizeWizardPage = () => {
                   <h3 className="text-sm font-extrabold mb-4 flex items-center justify-between" style={{ color: "#1c1c2e" }}>
                     <span>Live Garment Preview</span>
                     <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
-                      Layer-Based
+                      Single Option View
                     </span>
                   </h3>
                   <MannequinCanvas selections={state.selections} lastSelected={state.lastSelected} />
@@ -186,8 +202,18 @@ const CustomizeWizardPage = () => {
                   <PriceBreakdownPanel price={price} isCalculating={isCalculating} />
                 </div>
 
-                {/* Save / Submit Actions */}
+                {/* Save / Finish Actions */}
                 <div className="bg-white rounded-2xl p-6 border space-y-3 shadow-sm" style={{ borderColor: "#ede8e0" }}>
+                  {/* Primary Finish & Review Button */}
+                  <button
+                    onClick={() => setIsReviewOpen(true)}
+                    className="w-full py-3.5 rounded-xl text-xs font-extrabold text-white flex items-center justify-center gap-2 transition-all shadow-md hover:opacity-90"
+                    style={{ backgroundColor: "#1c1c2e" }}
+                  >
+                    <Sparkles size={16} className="text-amber-400" />
+                    Finish & Review Design
+                  </button>
+
                   <div>
                     <label className="block text-xs font-bold text-gray-700 mb-1">
                       Design Title
@@ -203,7 +229,7 @@ const CustomizeWizardPage = () => {
                   </div>
 
                   <button
-                    onClick={handleSaveDesign}
+                    onClick={() => handleSaveDesign()}
                     disabled={isSaving || !state.selections.clothingType}
                     className="w-full py-3 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-2 transition-all disabled:opacity-40 shadow-sm"
                     style={{ backgroundColor: "#4a5280" }}
@@ -242,6 +268,19 @@ const CustomizeWizardPage = () => {
           )}
         </main>
       </div>
+
+      {/* Finish & Review Modal */}
+      <FinishReviewModal
+        isOpen={isReviewOpen}
+        onClose={() => setIsReviewOpen(false)}
+        selections={state.selections}
+        price={price}
+        onSaveDesign={handleSaveDesign}
+        onSubmitRequest={handleSubmitRequest}
+        isSaving={isSaving}
+        savedDesignId={savedDesignId}
+        saveMessage={saveMessage}
+      />
     </div>
   );
 };

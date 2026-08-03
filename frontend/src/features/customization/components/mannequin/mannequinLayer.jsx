@@ -1,21 +1,23 @@
 import { useState, useEffect } from "react";
 
-// Renders a single transparent PNG layer inside the single preview container.
-// If an image URL fails to load, falls back to an SVG placeholder.
-// Resets error state immediately whenever src or value changes.
-const MannequinLayer = ({ src, fallbackSrc, zIndex, value }) => {
+// Renders a single image layer inside the preview container.
+// If an image is missing or fails to load (e.g., deleted from Cloudinary),
+// it is simply removed from the preview — no fallback image or SVG shape is shown.
+const MannequinLayer = ({ src, zIndex, value }) => {
   const [errored, setErrored] = useState(false);
 
   useEffect(() => {
     setErrored(false);
   }, [src, value]);
 
-  const resolvedSrc = errored || !src ? fallbackSrc : src;
+  if (!src || errored) {
+    return null;
+  }
 
   return (
-    <div className="pointer-events-none absolute inset-0" style={{ zIndex }}>
+    <div className="pointer-events-none absolute inset-0 flex items-center justify-center" style={{ zIndex }}>
       <img
-        src={resolvedSrc}
+        src={src}
         alt={value || ""}
         loading="eager"
         decoding="async"
