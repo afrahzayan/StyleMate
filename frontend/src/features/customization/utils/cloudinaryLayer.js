@@ -56,6 +56,19 @@ export const buildLayerUrl = (publicId, { width = 800 } = {}) => {
 // Rough hue per common color word, used only so the placeholder swatch (and
 // the color-family wash below) is recognizable before real artwork exists.
 const FALLBACK_HUES = {
+  "light-blue": "#93c5fd",
+  "navy-blue": "#1e3a8a",
+  "royal-blue": "#2563eb",
+  "pastel-green": "#86efac",
+  "emerald-green": "#10b981",
+  "dark-green": "#14532d",
+  "pastel-red": "#fca5a5",
+  "crimson-red": "#dc2626",
+  "dark-red": "#7f1d1d",
+  "sunny-yellow": "#fde047",
+  "soft-pink": "#f472b6",
+  "royal-purple": "#c084fc",
+  "metallic-gold": "#fbbf24",
   white: "#f8fafc",
   black: "#27272a",
   blue: "#3b82f6",

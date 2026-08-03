@@ -11,7 +11,6 @@ const { initSocket } = require("./config/socket");
 const initReminderWorker = require("./workers/reminderWorker");
 
 const designRoutes = require("./routes/store/designRoutes");
-const reviewRoutes = require("./routes/store/reviewRoutes");
 const customizationOptionRoutes = require("./routes/store/customizationOptionRoutes");
 const priceRoutes = require("./routes/store/priceRoutes");
 const aiRecommendationRoutes = require("./routes/store/aiRecommendationRoutes");
@@ -33,7 +32,26 @@ const httpServer = http.createServer(app);
 
 connectDB();
 
-app.use(cors({ origin: process.env.CLIENT_URL || "http://localhost:5173", credentials: true }));
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "http://localhost:5175",
+  "http://127.0.0.1:5173",
+  "http://127.0.0.1:5174",
+].filter(Boolean);
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin) || /^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin)) {
+        return callback(null, true);
+      }
+      return callback(null, true);
+    },
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(cookieParser());
 app.use(morgan("dev"));
@@ -54,7 +72,6 @@ app.get("/api/health", (req, res) => {
 });
 
 app.use("/api/store", designRoutes);
-app.use("/api/store/reviews", reviewRoutes);
 app.use("/api/customization", customizationOptionRoutes);
 app.use("/api/customization", priceRoutes);
 app.use("/api/customization", aiRecommendationRoutes);

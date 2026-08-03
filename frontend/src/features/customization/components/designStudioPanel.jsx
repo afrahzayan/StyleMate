@@ -25,6 +25,7 @@ const DesignStudioPanel = ({ selections, onSelect, onMeasurementChange, notes, o
         group={group}
         label={label}
         value={selections[group]}
+        gender={selections.gender}
         onSelect={(value) => onSelect(group, value)}
         layout="flex"
       />

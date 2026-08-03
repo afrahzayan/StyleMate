@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { ArrowRight, Sparkles, Scissors, Layers, Shirt } from "lucide-react";
+import Sidebar from "../../user/components/sidebar";
 import useDesignGallery from "../hooks/useDesignGallery";
 import DesignGrid from "../components/designGrid";
 
-// Store Home — a pure Custom Clothing Design Studio landing page. There is
-// nothing for sale here: every section either showcases designs or leads
-// into the "Design Your Own Dress" wizard.
 const StoreHomePage = () => {
+  const navigate = useNavigate();
+  const { user } = useSelector((state) => state.auth);
   const { fetchFeaturedDesigns, fetchRecentDesigns, fetchCategories, isLoading } = useDesignGallery();
   const [featured, setFeatured] = useState([]);
   const [recent, setRecent] = useState([]);
@@ -27,75 +28,157 @@ const StoreHomePage = () => {
   }, []);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8">
-      {/* Hero */}
-      <section className="mb-12 overflow-hidden rounded-3xl bg-gradient-to-br from-gray-900 to-gray-700 px-8 py-16 text-white">
-        <h1 className="max-w-xl text-3xl font-semibold sm:text-4xl">Design an Outfit That's Entirely Yours</h1>
-        <p className="mt-3 max-w-md text-sm text-gray-300">
-          Choose fabric, fit, sleeve, embroidery, and color, watch it take shape on a live preview, and see
-          your estimated price update as you go — no buying, no selling, just your design.
-        </p>
-        <div className="mt-6 flex gap-3">
-          <Link to="/customize/new" className="rounded-full bg-white px-5 py-2.5 text-sm font-medium text-gray-900">
-            Start Designing
-          </Link>
-          <Link to="/customize" className="rounded-full border border-white/40 px-5 py-2.5 text-sm font-medium">
-            AI Design Inspiration
-          </Link>
-        </div>
-      </section>
+    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: "#faf8f5" }}>
+      <Sidebar />
 
-      {/* Custom Design Categories */}
-      {categories.length > 0 && (
-        <section className="mb-12">
-          <h2 className="mb-4 text-xl font-semibold text-gray-900">Custom Design Categories</h2>
-          <div className="flex flex-wrap gap-3">
-            {categories.map((c) => (
-              <Link
-                key={c.clothingType}
-                to="/customize/new"
-                className="rounded-full border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:border-gray-900 hover:text-gray-900"
-              >
-                {c.clothingType}
-              </Link>
-            ))}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header */}
+        <header
+          className="flex items-center justify-between px-7 py-4 bg-white border-b shrink-0"
+          style={{ borderColor: "#ede8e0" }}
+        >
+          <div className="flex items-center gap-3">
+            <h1 className="font-extrabold text-base" style={{ color: "#1c1c2e" }}>
+              Custom Design Studio
+            </h1>
           </div>
-        </section>
-      )}
+          <button
+            onClick={() => navigate("/profile")}
+            className="flex items-center gap-2 text-gray-700 hover:opacity-80 transition-opacity"
+          >
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
+              style={{ backgroundColor: "#4a5280" }}
+            >
+              {user?.profileImage?.url ? (
+                <img src={user.profileImage.url} alt="Profile" className="w-full h-full rounded-full object-cover" />
+              ) : (
+                user?.name?.charAt(0)?.toUpperCase() || "U"
+              )}
+            </div>
+            <span className="text-xs font-bold hidden sm:inline" style={{ color: "#1c1c2e" }}>
+              {user?.name || "Profile"}
+            </span>
+          </button>
+        </header>
 
-      {/* Featured Custom Designs */}
-      <section className="mb-12">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-gray-900">Featured Custom Designs</h2>
-          <Link to="/customize" className="flex items-center gap-1 text-sm font-medium text-gray-600 hover:text-gray-900">
-            AI Design Inspiration <ArrowRight size={14} />
-          </Link>
-        </div>
-        <DesignGrid designs={featured} isLoading={isLoading} emptyMessage="No featured designs yet — be the first to design one!" />
-      </section>
+        {/* Content */}
+        <main className="flex-1 overflow-y-auto px-7 py-6">
+          {/* Hero Banner */}
+          <section
+            className="mb-8 overflow-hidden rounded-2xl p-8 text-white relative shadow-sm"
+            style={{ backgroundColor: "#3d4467" }}
+          >
+            <div className="relative z-10 max-w-2xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-xs font-semibold mb-4 text-[#b0b8d8]">
+                <Sparkles size={14} className="text-amber-300" />
+                <span>StyleMate Dress Studio</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-extrabold leading-tight mb-3">
+                Customize Your Own Dress
+              </h2>
+              <p className="text-xs sm:text-sm leading-relaxed mb-6" style={{ color: "#b0b8d8" }}>
+                Select your fabric, fit, sleeve, embroidery, and color shade. Watch your unique outfit take shape on a live preview with instant price estimation.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <Link
+                  to="/customize/new"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-white transition-all hover:bg-gray-50 shadow"
+                  style={{ color: "#3d4467" }}
+                >
+                  <Scissors size={15} />
+                  Start Customizing
+                </Link>
+                <Link
+                  to="/designs/saved"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold border transition-all text-white hover:bg-white/10"
+                  style={{ borderColor: "rgba(255,255,255,0.3)" }}
+                >
+                  <Layers size={15} />
+                  My Saved Designs
+                </Link>
+              </div>
+            </div>
+          </section>
 
-      {/* Recently Designed Dresses / Customer Gallery */}
-      <section className="mb-12">
-        <h2 className="mb-4 text-xl font-semibold text-gray-900">Recently Designed Dresses</h2>
-        <DesignGrid designs={recent} isLoading={isLoading} emptyMessage="No designs yet." />
-      </section>
+          {/* Categories */}
+          {categories.length > 0 && (
+            <section className="mb-8">
+              <h3 className="text-base font-extrabold mb-3" style={{ color: "#1c1c2e" }}>
+                Clothing Categories
+              </h3>
+              <div className="flex flex-wrap gap-2.5">
+                {categories.map((c) => (
+                  <button
+                    key={c.clothingType}
+                    onClick={() => navigate("/customize/new")}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border bg-white transition-colors hover:border-[#4a5280]"
+                    style={{ borderColor: "#ede8e0", color: "#374151" }}
+                  >
+                    <Shirt size={14} style={{ color: "#4a5280" }} />
+                    {c.clothingType}
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
 
-      {/* Design Your Own Dress CTA */}
-      <section className="mb-12 flex flex-col items-center gap-6 rounded-3xl bg-rose-50 px-8 py-12 text-center">
-        <h2 className="text-2xl font-semibold text-gray-900">Design Your Dream Outfit</h2>
-        <p className="max-w-lg text-sm text-gray-600">
-          Pick your fit, fabric, sleeve, embroidery, and color — watch it come together on a live preview,
-          with the estimated price updating as you go.
-        </p>
-        <div className="flex flex-wrap justify-center gap-3">
-          <Link to="/customize/new" className="rounded-full bg-gray-900 px-6 py-3 text-sm font-medium text-white">
-            Design Your Own Dress
-          </Link>
-          <Link to="/designs/saved" className="rounded-full border border-gray-300 px-6 py-3 text-sm font-medium text-gray-700">
-            My Saved Designs
-          </Link>
-        </div>
-      </section>
+          {/* Featured Custom Designs */}
+          <section className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-extrabold" style={{ color: "#1c1c2e" }}>
+                Featured Custom Designs
+              </h3>
+              <Link
+                to="/customize/new"
+                className="flex items-center gap-1 text-xs font-bold hover:underline"
+                style={{ color: "#4a5280" }}
+              >
+                Create New <ArrowRight size={13} />
+              </Link>
+            </div>
+            <DesignGrid
+              designs={featured}
+              isLoading={isLoading}
+              emptyMessage="No custom designs featured yet — create your first custom dress!"
+            />
+          </section>
+
+          {/* Recent Designs */}
+          <section className="mb-8">
+            <h3 className="text-base font-extrabold mb-4" style={{ color: "#1c1c2e" }}>
+              Recently Designed Dresses
+            </h3>
+            <DesignGrid
+              designs={recent}
+              isLoading={isLoading}
+              emptyMessage="No recent customer designs available."
+            />
+          </section>
+
+          {/* CTA Box */}
+          <section
+            className="mb-6 rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6 border"
+            style={{ backgroundColor: "#ffffff", borderColor: "#ede8e0" }}
+          >
+            <div>
+              <h3 className="text-lg font-extrabold mb-1" style={{ color: "#1c1c2e" }}>
+                Ready to Design Your Outfit?
+              </h3>
+              <p className="text-xs text-gray-500 max-w-md">
+                Answer basic onboarding questions and enter our live 2D Design Studio with layer-based previews.
+              </p>
+            </div>
+            <Link
+              to="/customize/new"
+              className="px-6 py-3 rounded-xl text-xs font-bold text-white transition-opacity hover:opacity-90 shrink-0 shadow"
+              style={{ backgroundColor: "#4a5280" }}
+            >
+              Start Designing Now
+            </Link>
+          </section>
+        </main>
+      </div>
     </div>
   );
 };

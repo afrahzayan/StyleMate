@@ -30,7 +30,7 @@ const CATALOG = {
   ],
   occasion: [
     { value: "Casual", label: "Casual" },
-    { value: "Party", label: "Party",  },
+    { value: "Party", label: "Party" },
     { value: "Wedding", label: "Wedding" },
     { value: "Formal", label: "Formal" },
     { value: "Festive", label: "Festive" },
@@ -41,10 +41,12 @@ const CATALOG = {
     { value: "Indo-Western", label: "Indo-Western" },
   ],
   clothingType: [
-    { value: "Shirt", label: "Shirt", layer: true, image: "StyleMate/onboarding/clothing/shirt" },
-    { value: "Kurti", label: "Kurti", layer: true, image: "StyleMate/onboarding/clothing/kurti" },
-    { value: "Gown", label: "Gown", layer: true, image: "StyleMate/onboarding/clothing/gown" },
-    { value: "Dress", label: "Dress", layer: true, image: "StyleMate/onboarding/clothing/dress" },
+    { value: "Shirt", label: "Shirt", layer: true, image: "StyleMate/onboarding/clothing/shirt", compatibleWith: ["Men", "Women", "Unisex"] },
+    { value: "T-Shirt", label: "T-Shirt", layer: true, image: "StyleMate/onboarding/clothing/tshirt", compatibleWith: ["Men", "Women", "Unisex"] },
+    { value: "Kurta", label: "Kurta", layer: true, image: "StyleMate/onboarding/clothing/kurta", compatibleWith: ["Men"] },
+    { value: "Kurti", label: "Kurti", layer: true, image: "StyleMate/onboarding/clothing/kurti", compatibleWith: ["Women"] },
+    { value: "Gown", label: "Gown", layer: true, image: "StyleMate/onboarding/clothing/gown", compatibleWith: ["Women"] },
+    { value: "Dress", label: "Dress", layer: true, image: "StyleMate/onboarding/clothing/dress", compatibleWith: ["Women"] },
   ],
   fit: [
     { value: "Slim", label: "Slim Fit" },
@@ -59,13 +61,21 @@ const CATALOG = {
     { value: "Denim", label: "Denim", priceModifier: 200, layer: true },
   ],
   color: [
-    { value: "White", label: "White", layer: true },
-    { value: "Black", label: "Black", layer: true },
-    { value: "Blue", label: "Blue", layer: true },
-    { value: "Red", label: "Red", layer: true },
-    { value: "Green", label: "Green", layer: true },
-    { value: "Yellow", label: "Yellow", layer: true },
-    { value: "Pink", label: "Pink", layer: true },
+    { value: "White", label: "Pure White", hex: "#ffffff", layer: true },
+    { value: "Black", label: "Classic Black", hex: "#18181b", layer: true },
+    { value: "Light Blue", label: "Light Blue", hex: "#93c5fd", layer: true },
+    { value: "Blue", label: "Royal Blue", hex: "#2563eb", layer: true },
+    { value: "Navy Blue", label: "Navy Blue", hex: "#1e3a8a", layer: true },
+    { value: "Pastel Red", label: "Pastel Red", hex: "#fca5a5", layer: true },
+    { value: "Red", label: "Crimson Red", hex: "#dc2626", layer: true },
+    { value: "Dark Red", label: "Dark Red", hex: "#7f1d1d", layer: true },
+    { value: "Pastel Green", label: "Pastel Green", hex: "#86efac", layer: true },
+    { value: "Green", label: "Emerald Green", hex: "#10b981", layer: true },
+    { value: "Dark Green", label: "Dark Green", hex: "#14532d", layer: true },
+    { value: "Yellow", label: "Sunny Yellow", hex: "#fde047", layer: true },
+    { value: "Pink", label: "Soft Pink", hex: "#f472b6", layer: true },
+    { value: "Purple", label: "Royal Purple", hex: "#c084fc", layer: true },
+    { value: "Gold", label: "Metallic Gold", hex: "#fbbf24", layer: true },
   ],
   sleeveType: [
     { value: "Sleeveless", label: "Sleeveless", priceModifier: 0 },
@@ -116,8 +126,6 @@ const CATALOG = {
   ],
 };
 
-// Layer-bearing groups map 1:1 to a cloudinaryLayers.js LAYER_FOLDERS key.
-// clothingType uses the "base" folder instead of its own group name.
 const LAYER_GROUP_MAP = {
   clothingType: "base",
   fabric: "fabric",
@@ -132,6 +140,8 @@ const LAYER_GROUP_MAP = {
 
 const PRICE_RULES = [
   { clothingType: "Shirt", basePrice: 799, lengthPriceModifier: 150, customMeasurementFee: 200 },
+  { clothingType: "T-Shirt", basePrice: 499, lengthPriceModifier: 100, customMeasurementFee: 150 },
+  { clothingType: "Kurta", basePrice: 899, lengthPriceModifier: 150, customMeasurementFee: 200 },
   { clothingType: "Kurti", basePrice: 999, lengthPriceModifier: 200, customMeasurementFee: 250 },
   { clothingType: "Gown", basePrice: 2499, lengthPriceModifier: 400, customMeasurementFee: 400 },
   { clothingType: "Dress", basePrice: 1299, lengthPriceModifier: 250, customMeasurementFee: 250 },
@@ -140,16 +150,21 @@ const PRICE_RULES = [
 async function seed() {
   await connectDB();
 
+  // Purge removed clothing types
+  const removedTypes = ["Polo Shirt", "Formal Shirt", "Jacket", "Hoodie"];
+  await CustomizationOption.deleteMany({ group: "clothingType", value: { $in: removedTypes } });
+  await PriceRule.deleteMany({ clothingType: { $in: removedTypes } });
+
   let upserted = 0;
   for (const [group, values] of Object.entries(CATALOG)) {
     const layerGroupKey = LAYER_GROUP_MAP[group];
     for (let i = 0; i < values.length; i++) {
-      const { value, label, priceModifier = 0, layer, image = null } = values[i];
+      const { value, label, priceModifier = 0, layer, image = null, compatibleWith = [] } = values[i];
       const layerAsset = layer ? buildLayerPublicId(layerGroupKey, value) : null;
 
       await CustomizationOption.findOneAndUpdate(
         { group, value },
-        { group, value, label, priceModifier, layerAsset, imagePublicId: image, isActive: true, sortOrder: i },
+        { group, value, label, priceModifier, layerAsset, imagePublicId: image, compatibleWith, isActive: true, sortOrder: i },
         { upsert: true, new: true, setDefaultsOnInsert: true }
       );
       upserted++;
@@ -164,11 +179,7 @@ async function seed() {
     );
   }
 
-  console.log(`Seeded ${upserted} customization options and ${PRICE_RULES.length} price rules.`);
-  console.log(
-    "Layer assets reference Cloudinary public_ids under custom-design/... — upload real transparent PNGs " +
-      "there via POST /api/customization/layer-assets (admin) to replace the placeholder fallback."
-  );
+  console.log(`Seeded ${upserted} customization options and ${PRICE_RULES.length} price rules. Cleaned up removed types.`);
   await mongoose.disconnect();
 }
 

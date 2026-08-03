@@ -1,5 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { ArrowLeft, CheckCircle2, Bookmark, Send } from "lucide-react";
+import Sidebar from "../../user/components/sidebar";
 import useCustomizationWizard from "../hooks/useCustomizationWizard";
 import useLivePrice from "../hooks/useLivePrice";
 import useMyDesigns from "../hooks/useMyDesigns";
@@ -10,9 +13,6 @@ import PriceBreakdownPanel from "../components/priceBreakeDownPanel";
 import DesignStudioPanel from "../components/designStudioPanel";
 import { resolveLayers } from "../components/mannequin/layerRegistry";
 
-// Phase 1 — Question Wizard: a handful of quick questions asked one at a
-// time (Store Home -> "Start Designing"). Config-driven: each entry just
-// points OptionStep at a CustomizationOption group.
 const QUIZ_STEPS = [
   { group: "gender", label: "Who is this outfit for?" },
   { group: "ageGroup", label: "Age group" },
@@ -22,11 +22,9 @@ const QUIZ_STEPS = [
   { group: "fit", label: "Preferred fit" },
 ];
 
-// Phase 2 — Design Studio: a two-panel layout (left: controls, right: live
-// preview + price) that replaces the step-by-step quiz once the basics are
-// answered, per the "Design Studio" spec.
 const CustomizeWizardPage = () => {
   const navigate = useNavigate();
+  const { user } = useSelector((state) => state.auth);
   const { state, setOption, setMeasurement, setNotes, nextStep, prevStep } = useCustomizationWizard();
   const { saveDesign, submitDesignRequest, isLoading: isSaving } = useMyDesigns();
   const [phase, setPhase] = useState("quiz"); // "quiz" | "studio"
@@ -51,7 +49,7 @@ const CustomizeWizardPage = () => {
     setSaveMessage("");
     const [previewLayer] = resolveLayers(state.selections);
     const result = await saveDesign({
-      title: title.trim() || `${state.selections.clothingType} Design`,
+      title: title.trim() || `${state.selections.clothingType || "Custom"} Design`,
       previewImage: {
         url: previewLayer?.src || previewLayer?.fallbackSrc || "",
         publicId: `${state.selections.clothingType || "design"}-preview`,
@@ -63,7 +61,7 @@ const CustomizeWizardPage = () => {
     });
     if (result.success) {
       setSavedDesignId(result.design._id);
-      setSaveMessage("Design saved to My Designs.");
+      setSaveMessage("Design saved successfully to My Designs!");
     } else {
       setSaveMessage(result.message);
     }
@@ -72,89 +70,178 @@ const CustomizeWizardPage = () => {
   const handleSubmitRequest = async () => {
     if (!savedDesignId) return;
     const result = await submitDesignRequest(savedDesignId);
-    setSaveMessage(result.success ? "Design request submitted — our team will follow up." : result.message);
+    setSaveMessage(result.success ? "Design request submitted — our tailoring team will contact you!" : result.message);
   };
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
-      {phase === "quiz" ? (
-        <div className="mx-auto max-w-lg">
-          <StepWizard
-            stepIndex={state.step}
-            totalSteps={QUIZ_STEPS.length}
-            onPrev={prevStep}
-            onNext={handleQuizNext}
-            canGoNext={canGoNext}
-          >
-            <OptionStep
-              group={currentQuizStep.group}
-              label={currentQuizStep.label}
-              value={state.selections[currentQuizStep.group]}
-              onSelect={(value) => setOption(currentQuizStep.group, value)}
-            />
-          </StepWizard>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-10 md:grid-cols-2">
-          {/* Left panel: customization controls */}
-          <div className="order-2 md:order-1">
+    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: "#faf8f5" }}>
+      <Sidebar />
+
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Top Header */}
+        <header
+          className="flex items-center justify-between px-7 py-4 bg-white border-b shrink-0"
+          style={{ borderColor: "#ede8e0" }}
+        >
+          <div className="flex items-center gap-3">
             <button
-              type="button"
-              onClick={() => setPhase("quiz")}
-              className="mb-4 text-xs font-medium text-gray-500 hover:text-gray-900"
+              onClick={() => (phase === "studio" ? setPhase("quiz") : navigate(-1))}
+              className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-100 transition-colors shrink-0"
             >
-              ← Edit gender / occasion / clothing type
+              <ArrowLeft size={18} style={{ color: "#1c1c2e" }} />
             </button>
-            <DesignStudioPanel
-              selections={state.selections}
-              onSelect={setOption}
-              onMeasurementChange={setMeasurement}
-              notes={state.additionalRequirements}
-              onNotesChange={setNotes}
-            />
+            <div>
+              <h1 className="font-extrabold text-base" style={{ color: "#1c1c2e" }}>
+                {phase === "quiz" ? "Basic Onboarding Questions" : "Live Design Studio"}
+              </h1>
+              <p className="text-xs text-gray-400">
+                {phase === "quiz" ? `Step ${state.step + 1} of ${QUIZ_STEPS.length}` : "Real-time Cloudinary customization"}
+              </p>
+            </div>
           </div>
 
-          {/* Right panel: live preview + price */}
-          <div className="order-1 md:sticky md:top-6 md:order-2 md:self-start">
-            <MannequinCanvas selections={state.selections} />
-            <div className="mt-6">
-              <PriceBreakdownPanel price={price} isCalculating={isCalculating} />
-            </div>
-
-            <div className="mt-4 flex flex-col gap-2">
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Name this design (optional)"
-                className="rounded-full border border-gray-200 px-4 py-2.5 text-sm outline-none"
-              />
-              <button
-                onClick={handleSaveDesign}
-                disabled={isSaving || !state.selections.clothingType}
-                className="w-full rounded-full bg-gray-900 py-3 text-sm font-medium text-white disabled:opacity-40"
-              >
-                {isSaving ? "Saving..." : "Save My Design"}
-              </button>
-              {savedDesignId && (
-                <button
-                  onClick={handleSubmitRequest}
-                  className="w-full rounded-full border border-gray-300 py-3 text-sm font-medium text-gray-700"
-                >
-                  Submit Design Request
-                </button>
+          <button
+            onClick={() => navigate("/profile")}
+            className="flex items-center gap-2 text-gray-700 hover:opacity-80 transition-opacity"
+          >
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
+              style={{ backgroundColor: "#4a5280" }}
+            >
+              {user?.profileImage?.url ? (
+                <img src={user.profileImage.url} alt="Profile" className="w-full h-full rounded-full object-cover" />
+              ) : (
+                user?.name?.charAt(0)?.toUpperCase() || "U"
               )}
-              {saveMessage && <p className="text-center text-xs text-gray-500">{saveMessage}</p>}
-              <button
-                onClick={() => navigate("/designs/saved")}
-                className="text-center text-xs font-medium text-gray-500 hover:text-gray-900"
-              >
-                View My Saved Designs
-              </button>
             </div>
-          </div>
-        </div>
-      )}
+          </button>
+        </header>
+
+        {/* Content Body */}
+        <main className="flex-1 overflow-y-auto px-7 py-6">
+          {phase === "quiz" ? (
+            <div className="mx-auto max-w-xl bg-white rounded-2xl p-6 sm:p-8 border shadow-sm" style={{ borderColor: "#ede8e0" }}>
+              <StepWizard
+                stepIndex={state.step}
+                totalSteps={QUIZ_STEPS.length}
+                onPrev={prevStep}
+                onNext={handleQuizNext}
+                canGoNext={canGoNext}
+              >
+                <OptionStep
+                  group={currentQuizStep.group}
+                  label={currentQuizStep.label}
+                  value={state.selections[currentQuizStep.group]}
+                  gender={state.selections.gender}
+                  onSelect={(value) => setOption(currentQuizStep.group, value)}
+                />
+              </StepWizard>
+            </div>
+          ) : (
+            <div className="max-w-6xl mx-auto grid grid-cols-1 gap-8 lg:grid-cols-12">
+              {/* Left Column: Customization Controls */}
+              <div className="lg:col-span-7 bg-white rounded-2xl p-6 border shadow-sm" style={{ borderColor: "#ede8e0" }}>
+                <div className="flex items-center justify-between pb-4 mb-6 border-b" style={{ borderColor: "#ede8e0" }}>
+                  <div>
+                    <h2 className="text-lg font-extrabold" style={{ color: "#1c1c2e" }}>
+                      Customization Options
+                    </h2>
+                    <p className="text-xs text-gray-400">
+                      Select fabric, color shades, sleeves, neck, pattern & work details.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setPhase("quiz")}
+                    className="text-xs font-bold text-[#4a5280] hover:underline"
+                  >
+                    Edit Basics
+                  </button>
+                </div>
+
+                <DesignStudioPanel
+                  selections={state.selections}
+                  onSelect={setOption}
+                  onMeasurementChange={setMeasurement}
+                  notes={state.additionalRequirements}
+                  onNotesChange={setNotes}
+                />
+              </div>
+
+              {/* Right Column: Live Garment Preview + Live Price */}
+              <div className="lg:col-span-5 space-y-6 lg:sticky lg:top-0 self-start">
+                {/* Mannequin Live Preview Card */}
+                <div className="bg-white rounded-2xl p-6 border shadow-sm" style={{ borderColor: "#ede8e0" }}>
+                  <h3 className="text-sm font-extrabold mb-4 flex items-center justify-between" style={{ color: "#1c1c2e" }}>
+                    <span>Live Garment Preview</span>
+                    <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                      Layer-Based
+                    </span>
+                  </h3>
+                  <MannequinCanvas selections={state.selections} lastSelected={state.lastSelected} />
+                </div>
+
+                {/* Live Price Calculation Card */}
+                <div className="bg-white rounded-2xl p-6 border shadow-sm" style={{ borderColor: "#ede8e0" }}>
+                  <PriceBreakdownPanel price={price} isCalculating={isCalculating} />
+                </div>
+
+                {/* Save / Submit Actions */}
+                <div className="bg-white rounded-2xl p-6 border space-y-3 shadow-sm" style={{ borderColor: "#ede8e0" }}>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">
+                      Design Title
+                    </label>
+                    <input
+                      type="text"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      placeholder="My Custom Dress"
+                      className="w-full px-4 py-2 rounded-xl border text-xs font-medium outline-none focus:border-[#4a5280]"
+                      style={{ borderColor: "#ede8e0" }}
+                    />
+                  </div>
+
+                  <button
+                    onClick={handleSaveDesign}
+                    disabled={isSaving || !state.selections.clothingType}
+                    className="w-full py-3 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-2 transition-all disabled:opacity-40 shadow-sm"
+                    style={{ backgroundColor: "#4a5280" }}
+                  >
+                    <Bookmark size={15} />
+                    {isSaving ? "Saving..." : "Save Custom Design"}
+                  </button>
+
+                  {savedDesignId && (
+                    <button
+                      onClick={handleSubmitRequest}
+                      className="w-full py-3 rounded-xl text-xs font-bold text-gray-700 border flex items-center justify-center gap-2 transition-all hover:bg-gray-50"
+                      style={{ borderColor: "#ede8e0" }}
+                    >
+                      <Send size={15} className="text-[#4a5280]" />
+                      Submit Design Request
+                    </button>
+                  )}
+
+                  {saveMessage && (
+                    <div className="p-3 rounded-xl bg-gray-50 border text-xs font-semibold text-center text-gray-700 flex items-center justify-center gap-1.5" style={{ borderColor: "#ede8e0" }}>
+                      <CheckCircle2 size={15} className="text-emerald-600" />
+                      <span>{saveMessage}</span>
+                    </div>
+                  )}
+
+                  <button
+                    onClick={() => navigate("/designs/saved")}
+                    className="w-full text-center text-xs font-semibold text-[#4a5280] hover:underline pt-1"
+                  >
+                    View My Saved Designs →
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </main>
+      </div>
     </div>
   );
 };

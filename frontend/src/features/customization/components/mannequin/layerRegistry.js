@@ -58,3 +58,26 @@ export function resolveLayers(selections = {}) {
 
   return layers.sort((a, b) => a.zIndex - b.zIndex);
 }
+
+/**
+ * Returns ONLY the single layer for the most recently clicked option.
+ */
+export function resolveSingleLayer(lastSelected, selections = {}) {
+  const targetGroup = lastSelected?.group || "clothingType";
+  const targetValue = lastSelected?.value || selections[targetGroup] || selections.clothingType;
+
+  if (!targetValue) return null;
+
+  const folderGroup = targetGroup === "clothingType" ? "base" : targetGroup;
+  const publicId = buildLayerPublicId(folderGroup, targetValue);
+  if (!publicId) return null;
+
+  return {
+    key: `${targetGroup}:${targetValue}`,
+    group: targetGroup,
+    value: targetValue,
+    src: buildLayerUrl(publicId),
+    fallbackSrc: getPlaceholderLayer(targetGroup, targetValue),
+    zIndex: 10,
+  };
+}

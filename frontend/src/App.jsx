@@ -35,6 +35,8 @@ import AdminReportPage from "./features/admin/pages/adminReportPage";
 
 import NotificationBell from "./features/notifications/components/notificationBell";
 
+import ProfilePage from "./features/user/pages/profilePage";
+
 import StoreHomePage from "./features/store/pages/storeHomePage";
 
 import CustomizationHomePage from "./features/customization/pages/customizationHomePage";
@@ -251,11 +253,32 @@ const App = () => {
           }
         />
 
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route
+          path="/profile"
+          element={
+            <PrivateRoute>
+              <ProfilePage />
+            </PrivateRoute>
+          }
+        />
 
-        <Route path="/store" element={<StoreHomePage />} />
+        <Route
+          path="/store"
+          element={
+            <PrivateRoute>
+              <StoreHomePage />
+            </PrivateRoute>
+          }
+        />
 
-        <Route path="/customize" element={<CustomizationHomePage />} />
+        <Route
+          path="/customize"
+          element={
+            <PrivateRoute>
+              <CustomizationHomePage />
+            </PrivateRoute>
+          }
+        />
         <Route
           path="/customize/new"
           element={

@@ -42,7 +42,11 @@ const initialState = {
 function reducer(state, action) {
   switch (action.type) {
     case "SET_OPTION":
-      return { ...state, selections: { ...state.selections, [action.group]: action.value } };
+      return {
+        ...state,
+        lastSelected: { group: action.group, value: action.value },
+        selections: { ...state.selections, [action.group]: action.value },
+      };
     case "SET_MEASUREMENT":
       return {
         ...state,

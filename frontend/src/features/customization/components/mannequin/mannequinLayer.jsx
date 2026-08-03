@@ -1,16 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-// Renders a single layer. Deliberately dumb — all the "which layer, in what
-// order" decisions live in layerRegistry.js, not here. This is what makes
-// the mannequin easy to swap for a Three.js renderer later without
-// touching layerRegistry.js or the wizard.
-//
-// If the real Cloudinary artwork for this layer hasn't been uploaded yet,
-// `src` 404s and we fall back to a labeled placeholder swatch so the studio
-// still feels alive during development — swap in real art later with zero
-// code changes (see cloudinaryLayers.js upload convention).
+// Renders a single transparent PNG layer inside the single preview container.
+// If an image URL fails to load, falls back to an SVG placeholder.
+// Resets error state immediately whenever src or value changes.
 const MannequinLayer = ({ src, fallbackSrc, zIndex, value }) => {
   const [errored, setErrored] = useState(false);
+
+  useEffect(() => {
+    setErrored(false);
+  }, [src, value]);
+
   const resolvedSrc = errored || !src ? fallbackSrc : src;
 
   return (
@@ -18,9 +17,9 @@ const MannequinLayer = ({ src, fallbackSrc, zIndex, value }) => {
       <img
         src={resolvedSrc}
         alt={value || ""}
-        loading="lazy"
+        loading="eager"
         decoding="async"
-        className="h-full w-full object-contain"
+        className="h-full w-full object-contain transition-opacity duration-200"
         onError={() => setErrored(true)}
       />
     </div>

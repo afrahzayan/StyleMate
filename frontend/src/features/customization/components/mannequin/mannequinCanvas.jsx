@@ -1,58 +1,73 @@
-import { resolveLayers } from "./layerRegistry";
+import { resolveSingleLayer } from "./layerRegistry";
 import MannequinLayer from "./mannequinLayer";
+import { getHexForOption } from "../questionnaire/optionStep";
 
-// Human-friendly group names for the legend strip below the canvas.
 const GROUP_LABELS = {
-  clothingType: "Clothing Type",
+  clothingType: "Garment",
   color: "Color",
   fabric: "Fabric",
-  pocket: "Pocket",
   sleeveType: "Sleeve",
-  cuff: "Cuff",
   neckType: "Neck",
-  buttonType: "Buttons",
   pattern: "Pattern",
   embroidery: "Embroidery",
   threadWork: "Thread Work",
   stoneWork: "Stone Work",
 };
 
-// Orchestrator: subscribes to the wizard's single `selections` object and
-// derives the visible layer stack from it. Because it only reads from
-// selections (never owns or mutates them), changing one field re-renders
-// only the layers affected by that field — the others are untouched, which
-// is exactly the "changing one option should never reset the others"
-// requirement from the spec.
-const MannequinCanvas = ({ selections }) => {
-  const layers = resolveLayers(selections);
+const MannequinCanvas = ({ selections, lastSelected }) => {
+  // Base garment selection (e.g. Shirt, Kurta, T-Shirt, Kurti, Gown, etc.)
+  const clothingType = selections?.clothingType || "Shirt";
+
+  // Base layer for the garment
+  const baseLayer = resolveSingleLayer({ group: "clothingType", value: clothingType }, selections);
+
+  // Active option layer if user clicked something specific (Sleeve, Neck, Fabric, etc.)
+  const activeLayer = lastSelected && lastSelected.group !== "clothingType"
+    ? resolveSingleLayer(lastSelected, selections)
+    : null;
+
+  // Selected CSS Color (HEX value)
+  const selectedColorHex = selections?.color ? getHexForOption(selections.color) : null;
+
+  const currentDisplayLabel = activeLayer
+    ? `${GROUP_LABELS[activeLayer.group] || activeLayer.group}: ${activeLayer.value}`
+    : `Garment: ${clothingType}`;
 
   return (
     <div>
-      <div className="relative mx-auto aspect-[3/4] w-full max-w-sm overflow-hidden rounded-2xl bg-gray-50">
-        {layers.length === 0 && (
-          <p className="absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-gray-400">
-            Pick a clothing type to start the preview
-          </p>
+      {/* Single Live Preview Box */}
+      <div className="relative mx-auto aspect-[3/4] w-full max-w-sm overflow-hidden rounded-2xl bg-[#f8fafc] border border-gray-200 shadow-inner flex items-center justify-center">
+        {/* Base Garment Image */}
+        {baseLayer && <MannequinLayer key={baseLayer.key} {...baseLayer} />}
+
+        {/* CSS Color Tint Wash (if a color is selected) */}
+        {selectedColorHex && (
+          <div
+            className="pointer-events-none absolute inset-0 mix-blend-multiply opacity-40 transition-colors duration-300"
+            style={{ backgroundColor: selectedColorHex }}
+          />
         )}
-        {layers.map((layer) => (
-          <MannequinLayer key={layer.key} {...layer} />
-        ))}
+
+        {/* Active Option Layer Overlay */}
+        {activeLayer && (
+          <MannequinLayer key={activeLayer.key} {...activeLayer} />
+        )}
       </div>
 
-      {/* Readable confirmation of exactly what's applied right now. The
-          layered preview itself uses placeholder shapes until real Cloudinary
-          art is uploaded for a given option, so this strip is what makes every
-          selection visibly, unambiguously register — no squinting required. */}
-      {layers.length > 0 && (
-        <div className="mx-auto mt-4 flex max-w-sm flex-wrap gap-x-4 gap-y-1.5 px-1 text-xs text-gray-500">
-          {layers.map((layer) => (
-            <span key={layer.key}>
-              <span className="text-gray-400">{GROUP_LABELS[layer.group] || layer.group}:</span>{" "}
-              <span className="font-medium text-gray-700">{layer.value}</span>
-            </span>
-          ))}
-        </div>
-      )}
+      {/* Active Preview Badge */}
+      <div className="mx-auto mt-4 flex max-w-sm justify-center">
+        <span className="inline-flex items-center gap-1.5 bg-[#4a5280] text-white rounded-full px-3.5 py-1 text-xs font-bold shadow-sm">
+          <span className="opacity-75 font-normal">Previewing:</span>
+          <span>{currentDisplayLabel}</span>
+          {selections?.color && (
+            <span
+              className="w-3 h-3 rounded-full border border-white/50 ml-1 shrink-0"
+              style={{ backgroundColor: selectedColorHex }}
+              title={selections.color}
+            />
+          )}
+        </span>
+      </div>
     </div>
   );
 };
