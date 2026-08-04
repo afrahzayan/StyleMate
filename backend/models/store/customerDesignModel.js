@@ -25,6 +25,8 @@ const customerDesignSchema = new Schema(
       sleeveLength: { type: Number, default: null },
     },
     price: { type: Number, required: true },
+    creationSpeed: { type: String, enum: ["standard", "fast"], default: "standard" },
+    fastCreationFee: { type: Number, default: 0 },
     ratingAvg: { type: Number, default: 0 },
     ratingCount: { type: Number, default: 0 },
     isFeatured: { type: Boolean, default: true },

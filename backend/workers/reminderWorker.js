@@ -9,6 +9,13 @@ const formatDate = (date) =>
   new Date(date).toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
 
 const buildContent = (kind, outfitName, dateStr) => {
+  if (kind === "exactTime") {
+    return {
+      type: "planner_reminder_due",
+      title: "Outfit reminder is due",
+      message: `Your scheduled outfit "${outfitName}" is set for right now!`,
+    };
+  }
   if (kind === "dayBefore") {
     return {
       type: "planner_reminder_day_before",

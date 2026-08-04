@@ -4,7 +4,7 @@ const CustomerDesign = require("../../models/store/customerDesignModel");
 // body: { title, previewImage: { url, publicId }, clothingType, selections, price }
 const saveDesign = async (req, res) => {
   try {
-    const { title, previewImage, clothingType, selections = {}, measurements = {}, price } = req.body;
+    const { title, previewImage, clothingType, selections = {}, measurements = {}, price, creationSpeed = "standard", fastCreationFee = 0 } = req.body;
 
     if (!title || !previewImage?.url || !clothingType || price == null) {
       return res.status(400).json({ message: "title, previewImage, clothingType and price are required" });
@@ -18,6 +18,8 @@ const saveDesign = async (req, res) => {
       selections,
       measurements,
       price,
+      creationSpeed,
+      fastCreationFee,
       isFeatured: false,
       isActive: true,
       status: "saved",

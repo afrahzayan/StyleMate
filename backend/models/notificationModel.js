@@ -4,6 +4,7 @@ const { Schema } = mongoose;
 const notificationSchema = new Schema(
   {
     user: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
+    sender: { type: Schema.Types.ObjectId, ref: "User", default: null },
 
     type: {
       type: String,
@@ -11,6 +12,9 @@ const notificationSchema = new Schema(
         "report_content_removed",
         "planner_reminder_day_before",
         "planner_reminder_morning_of",
+        "planner_reminder_due",
+        "post_like",
+        "post_comment",
         "system",
       ],
       required: true,

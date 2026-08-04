@@ -13,8 +13,7 @@ import PostDetailModal from "../components/postDetailModel";
 import useCommunity from "../hooks/useCommunity";
 
 const FILTERS = [
-  { label: "Latest", value: "Latest" },
-  { label: "Most Liked", value: "Most Liked" },
+  { label: "Trending Feed", value: "Trending Feed" },
   { label: "Casual", value: "Casual" },
   { label: "Formal", value: "Formal" },
   { label: "Party", value: "Party" },
@@ -38,7 +37,7 @@ const CommunityFeedPage = () => {
 
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [activeFilter, setActiveFilter] = useState("Latest");
+  const [activeFilter, setActiveFilter] = useState("Trending Feed");
   const [showMine, setShowMine] = useState(false);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 350);
@@ -60,8 +59,8 @@ const CommunityFeedPage = () => {
     abortRef.current = controller;
 
     setLoading(true);
-    const occasion = ["Latest", "Most Liked"].includes(activeFilter) ? "All" : activeFilter;
-    const sort = activeFilter === "Most Liked" ? "mostLiked" : "recent";
+    const occasion = activeFilter === "Trending Feed" ? "All" : activeFilter;
+    const sort = "trending";
     const result = await fetchPosts({ search: debouncedSearch, occasion, sort, mine: showMine, signal: controller.signal });
     if (abortRef.current !== controller) return;
     setLoading(false);

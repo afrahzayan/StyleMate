@@ -26,7 +26,7 @@ const buildReminderDate = (eventDate, kind) => {
  */
 const cancelReminders = async (planId) => {
   if (!reminderQueue) return;
-  const ids = [buildJobId(planId, "dayBefore"), buildJobId(planId, "morningOf")];
+  const ids = [buildJobId(planId, "exactTime"), buildJobId(planId, "dayBefore"), buildJobId(planId, "morningOf")];
   await Promise.all(
     ids.map(async (jobId) => {
       const job = await reminderQueue.getJob(jobId);
@@ -36,9 +36,8 @@ const cancelReminders = async (planId) => {
 };
 
 /**
- * (Re)schedules the "day before" and "morning of" reminders for a plan.
- * Call this after create AND after update (it clears old jobs first, so
- * it's safe to call repeatedly / on every save).
+ * (Re)schedules the "exact event time", "day before", and "morning of" reminders for a plan.
+ * Call this after create AND after update.
  */
 const scheduleReminders = async (plan) => {
   if (!reminderQueue) return;
@@ -47,12 +46,29 @@ const scheduleReminders = async (plan) => {
   const now = Date.now();
   const jobs = [];
 
+  // 1. Exact Event Time Reminder
+  const eventDate = new Date(plan.date);
+  const exactDelay = eventDate.getTime() - now;
+  if (exactDelay > 0) {
+    jobs.push(
+      reminderQueue.add(
+        "reminder",
+        { planId: String(plan._id), userId: String(plan.user), kind: "exactTime" },
+        {
+          jobId: buildJobId(plan._id, "exactTime"),
+          delay: exactDelay,
+          removeOnComplete: true,
+          removeOnFail: true,
+        }
+      )
+    );
+  }
+
+  // 2. Day Before & Morning Of Reminders
   for (const kind of ["dayBefore", "morningOf"]) {
     const fireAt = buildReminderDate(plan.date, kind);
     const delay = fireAt.getTime() - now;
 
-    // Don't schedule reminders that would fire in the past
-    // (e.g. planning an outfit for later today, past 7:30 AM).
     if (delay <= 0) continue;
 
     jobs.push(

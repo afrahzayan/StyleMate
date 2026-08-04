@@ -47,10 +47,12 @@ const CustomizeWizardPage = () => {
     }
   };
 
-  const handleSaveDesign = async (customTitle) => {
+  const handleSaveDesign = async (customTitle, extraOptions = {}) => {
     setSaveMessage("");
     const designTitle = customTitle || title.trim() || `${state.selections.clothingType || "Custom"} Design`;
     const [previewLayer] = resolveLayers(state.selections);
+    const finalPrice = extraOptions.totalPrice || price.total || 799;
+
     const result = await saveDesign({
       title: designTitle,
       previewImage: {
@@ -60,11 +62,13 @@ const CustomizeWizardPage = () => {
       clothingType: state.selections.clothingType,
       selections: state.selections,
       measurements: state.selections.measurements,
-      price: price.total,
+      price: finalPrice,
+      creationSpeed: extraOptions.creationSpeed || "standard",
+      fastCreationFee: extraOptions.fastCreationFee || 0,
     });
     if (result.success) {
       setSavedDesignId(result.design._id);
-      setSaveMessage("Design saved successfully to My Designs!");
+      setSaveMessage("Design saved successfully! Proceeding to checkout...");
     } else {
       setSaveMessage(result.message);
     }

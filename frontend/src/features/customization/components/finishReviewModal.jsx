@@ -5,6 +5,8 @@ import { getCombinationDetails } from "../utils/finalImageRegistry";
 import { getHexForOption } from "./questionnaire/optionStep";
 import MannequinCanvas from "./mannequin/mannequinCanvas";
 
+const FAST_CREATION_FEE = 300;
+
 const FinishReviewModal = ({
   isOpen,
   onClose,
@@ -18,13 +20,28 @@ const FinishReviewModal = ({
 }) => {
   const [imgFailed, setImgFailed] = useState(false);
   const [title, setTitle] = useState("");
+  const [creationSpeed, setCreationSpeed] = useState("standard");
 
   if (!isOpen) return null;
 
   const publicId = buildFinalImagePublicId(selections);
   const finalImageUrl = buildFinalImageUrl(publicId);
-  const comboDetails = getCombinationDetails(selections);
   const colorHex = selections.color ? getHexForOption(selections.color) : null;
+
+  const baseTotalPrice = price?.total || 799;
+  const extraFee = creationSpeed === "fast" ? FAST_CREATION_FEE : 0;
+  const finalCalculatedPrice = baseTotalPrice + extraFee;
+
+  const handleSaveWithSpeed = (customTitle) => {
+    onSaveDesign(customTitle, { creationSpeed, fastCreationFee: extraFee, totalPrice: finalCalculatedPrice });
+  };
+
+  const handleProceedToCheckout = () => {
+    handleSaveWithSpeed(title);
+    if (onSubmitRequest) {
+      onSubmitRequest();
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
@@ -56,27 +73,14 @@ const FinishReviewModal = ({
                   className="w-full h-full object-contain"
                 />
               ) : (
-                /* Fallback preview if 1500x1500 final image is not uploaded to Cloudinary yet */
                 <div className="w-full h-full flex flex-col items-center justify-center">
                   <MannequinCanvas selections={selections} lastSelected={{ group: "clothingType", value: selections.clothingType }} />
-                  <p className="mt-2 text-[11px] font-semibold text-gray-400 text-center px-4">
-                    Previewing initial garment. Upload final 1500×1500 image to:
-                    <span className="block text-[10px] text-[#4a5280] font-mono break-all mt-0.5">{publicId}.png</span>
-                  </p>
                 </div>
               )}
             </div>
-
-            {/* Cloudinary Target Info Card */}
-            <div className="w-full max-w-md mt-4 p-3 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-900">
-              <span className="font-bold block mb-1">Target Cloudinary Path:</span>
-              <code className="block bg-white p-1.5 rounded border border-amber-200 font-mono text-[10px] break-all select-all text-gray-800">
-                {publicId}.png
-              </code>
-            </div>
           </div>
 
-          {/* Right Column: Full Specifications + Price + Action Buttons */}
+          {/* Right Column: Full Specifications + Creation Option + Price + Checkout */}
           <div className="lg:col-span-6 flex flex-col justify-between space-y-6">
             <div>
               <h3 className="text-xl font-extrabold text-[#1c1c2e] mb-1">
@@ -111,19 +115,50 @@ const FinishReviewModal = ({
               </div>
             </div>
 
+            {/* Creation Speed Service Option */}
+            <div className="p-3.5 rounded-2xl border bg-gray-50/80 space-y-2 text-xs" style={{ borderColor: "#ede8e0" }}>
+              <span className="font-extrabold text-[#1c1c2e] block">Creation Speed:</span>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                <label className="flex items-center gap-2 cursor-pointer font-semibold text-gray-700">
+                  <input
+                    type="radio"
+                    name="creationSpeed"
+                    value="standard"
+                    checked={creationSpeed === "standard"}
+                    onChange={() => setCreationSpeed("standard")}
+                    className="accent-[#4a5280]"
+                  />
+                  Standard Creation (₹0 extra)
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer font-semibold text-gray-700">
+                  <input
+                    type="radio"
+                    name="creationSpeed"
+                    value="fast"
+                    checked={creationSpeed === "fast"}
+                    onChange={() => setCreationSpeed("fast")}
+                    className="accent-[#4a5280]"
+                  />
+                  Fast Creation (+₹{FAST_CREATION_FEE})
+                </label>
+              </div>
+            </div>
+
             {/* Price Box */}
             <div className="p-4 rounded-2xl bg-[#f0f2fa] border border-[#4a5280]/20 flex items-center justify-between">
               <div>
-                <span className="text-xs text-gray-500 font-medium">Final Estimated Price</span>
-                <p className="text-2xl font-black text-[#1c1c2e]">₹{price?.total || 799}</p>
+                <span className="text-xs text-gray-500 font-medium">
+                  Total Final Price {creationSpeed === "fast" && <span className="text-emerald-700">(Fast Creation +₹300)</span>}
+                </span>
+                <p className="text-2xl font-black text-[#1c1c2e]">₹{finalCalculatedPrice}</p>
               </div>
               <span className="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-bold border border-emerald-300">
                 Custom Tailored
               </span>
             </div>
 
-            {/* Action Buttons */}
-            <div className="space-y-3 pt-2">
+            {/* Action & Checkout Buttons */}
+            <div className="space-y-3 pt-1">
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1">Design Title</label>
                 <input
@@ -136,26 +171,26 @@ const FinishReviewModal = ({
                 />
               </div>
 
+              {/* Checkout Button */}
               <button
-                onClick={() => onSaveDesign(title)}
+                onClick={handleProceedToCheckout}
                 disabled={isSaving}
-                className="w-full py-3.5 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-2 transition-all shadow-md disabled:opacity-50"
-                style={{ backgroundColor: "#4a5280" }}
+                className="w-full py-3.5 rounded-xl text-xs font-extrabold text-white flex items-center justify-center gap-2 transition-all shadow-md hover:opacity-90 disabled:opacity-50"
+                style={{ backgroundColor: "#1c1c2e" }}
               >
-                <Bookmark size={16} />
-                {isSaving ? "Saving Design..." : "Save Custom Design"}
+                <Send size={16} className="text-amber-400" />
+                Proceed to Checkout
               </button>
 
-              {savedDesignId && (
-                <button
-                  onClick={onSubmitRequest}
-                  className="w-full py-3.5 rounded-xl text-xs font-bold text-gray-800 border flex items-center justify-center gap-2 transition-all hover:bg-gray-50"
-                  style={{ borderColor: "#ede8e0" }}
-                >
-                  <Send size={16} className="text-[#4a5280]" />
-                  Submit Design Request
-                </button>
-              )}
+              <button
+                onClick={() => handleSaveWithSpeed(title)}
+                disabled={isSaving}
+                className="w-full py-3 rounded-xl text-xs font-bold text-gray-700 border flex items-center justify-center gap-2 transition-all hover:bg-gray-50"
+                style={{ borderColor: "#ede8e0" }}
+              >
+                <Bookmark size={15} />
+                {isSaving ? "Saving..." : "Save Custom Design Only"}
+              </button>
 
               {saveMessage && (
                 <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs font-semibold text-center text-emerald-800 flex items-center justify-center gap-1.5">

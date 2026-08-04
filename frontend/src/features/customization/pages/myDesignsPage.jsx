@@ -6,6 +6,23 @@ import Sidebar from "../../user/components/sidebar";
 import useMyDesigns from "../hooks/useMyDesigns";
 import { downloadDesignSummary } from "../utils/downloadDesignSummary";
 
+const CLOTHING_TYPE_IMAGES = {
+  Shirt: "https://res.cloudinary.com/kerygwxk/image/upload/v1700000000/StyleMate/onboarding/clothing/shirt.png",
+  "T-Shirt": "https://res.cloudinary.com/kerygwxk/image/upload/v1700000000/StyleMate/onboarding/clothing/tshirt.png",
+  Kurta: "https://res.cloudinary.com/kerygwxk/image/upload/v1700000000/StyleMate/onboarding/clothing/kurta.png",
+  Kurti: "https://res.cloudinary.com/kerygwxk/image/upload/v1700000000/StyleMate/onboarding/clothing/kurti.png",
+  Gown: "https://res.cloudinary.com/kerygwxk/image/upload/v1700000000/StyleMate/onboarding/clothing/gown.png",
+  Dress: "https://res.cloudinary.com/kerygwxk/image/upload/v1700000000/StyleMate/onboarding/clothing/dress.png",
+};
+
+const getClothingImage = (design) => {
+  if (design?.previewImage?.url && !design.previewImage.url.includes("placeholder")) {
+    return design.previewImage.url;
+  }
+  const type = design?.clothingType || design?.selections?.clothingType || "Shirt";
+  return CLOTHING_TYPE_IMAGES[type] || CLOTHING_TYPE_IMAGES.Shirt;
+};
+
 const MyDesignsPage = ({ view = "saved" }) => {
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
@@ -142,7 +159,7 @@ const MyDesignsPage = ({ view = "saved" }) => {
               >
                 <div className="aspect-[3/4] bg-gray-50 relative overflow-hidden">
                   <img
-                    src={design.previewImage?.url}
+                    src={getClothingImage(design)}
                     alt={design.title}
                     className="h-full w-full object-cover"
                   />

@@ -6,6 +6,7 @@ const Report = require("../models/reportModel");
 const Outfit = require("../models/outfitModel");
 const User = require("../models/userModel");
 const { uploadBufferToCloudinary, deleteFromCloudinary } = require("../config/cloudinary");
+const { createNotification } = require("../services/notificationService");
 
 const AUTHOR_FIELDS = "name username profileImage";
 const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -14,17 +15,31 @@ const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const withViewerFlags = async (posts, userId) => {
   if (!posts.length) return posts;
   const postIds = posts.map((p) => p._id);
-  const [likes, saves] = await Promise.all([
+  const [likes, saves, recentComments] = await Promise.all([
     Like.find({ user: userId, post: { $in: postIds } }).select("post"),
     Save.find({ user: userId, post: { $in: postIds } }).select("post"),
+    Comment.find({ post: { $in: postIds } })
+      .sort({ createdAt: -1 })
+      .populate("user", AUTHOR_FIELDS),
   ]);
+
   const likedSet = new Set(likes.map((l) => l.post.toString()));
   const savedSet = new Set(saves.map((s) => s.post.toString()));
+
+  const commentsMap = {};
+  recentComments.forEach((c) => {
+    const pId = c.post.toString();
+    if (!commentsMap[pId]) commentsMap[pId] = [];
+    if (commentsMap[pId].length < 2) {
+      commentsMap[pId].push(c);
+    }
+  });
 
   return posts.map((post) => ({
     ...post.toObject(),
     isLiked: likedSet.has(post._id.toString()),
     isSaved: savedSet.has(post._id.toString()),
+    recentComments: commentsMap[post._id.toString()] || [],
   }));
 };
 
@@ -90,7 +105,7 @@ const getPosts = async (req, res) => {
     const filter = { status: "visible" };
 
     if (mine === "true") filter.user = req.userId;
-    if (occasion && occasion !== "All" && occasion !== "Latest" && occasion !== "Most Liked") {
+    if (occasion && occasion !== "All" && occasion !== "Latest" && occasion !== "Most Liked" && occasion !== "Trending") {
       filter.occasion = occasion;
     }
 
@@ -108,12 +123,26 @@ const getPosts = async (req, res) => {
       ];
     }
 
-    const sortOption = sort === "mostLiked" ? { likesCount: -1, createdAt: -1 } : { createdAt: -1 };
+    const isTrending = sort === "mostLiked" || sort === "trending" || occasion === "Most Liked" || occasion === "Trending";
+    const sortOption = isTrending
+      ? { likesCount: -1, commentsCount: -1, createdAt: -1 }
+      : { createdAt: -1 };
 
     const posts = await CommunityPost.find(filter).sort(sortOption).populate("user", AUTHOR_FIELDS);
     const withFlags = await withViewerFlags(posts, req.userId);
 
-    return res.status(200).json({ posts: withFlags, count: withFlags.length });
+    // Consolidated data: include quick lists for trending and latest posts if needed by caller
+    const [latestSample, trendingSample] = await Promise.all([
+      CommunityPost.find({ status: "visible" }).sort({ createdAt: -1 }).limit(5).select("title likesCount commentsCount image"),
+      CommunityPost.find({ status: "visible" }).sort({ likesCount: -1, commentsCount: -1 }).limit(5).select("title likesCount commentsCount image"),
+    ]);
+
+    return res.status(200).json({
+      posts: withFlags,
+      count: withFlags.length,
+      latestPosts: latestSample,
+      trendingPosts: trendingSample,
+    });
   } catch (err) {
     console.log(err);
     return res.status(500).json({ message: "Something went wrong while loading the feed" });
@@ -210,6 +239,21 @@ const toggleLike = async (req, res) => {
     await Like.create({ user: req.userId, post: post._id });
     post.likesCount += 1;
     await post.save();
+
+    if (post.user && post.user.toString() !== req.userId) {
+      const likingUser = await User.findById(req.userId).select("name username");
+      const senderName = likingUser?.name || likingUser?.username || "Someone";
+      createNotification({
+        userId: post.user,
+        senderId: req.userId,
+        type: "post_like",
+        title: "New Like",
+        message: `❤️ ${senderName} liked your post.`,
+        relatedType: "CommunityPost",
+        relatedId: post._id,
+      }).catch((err) => console.log("Like notification error:", err.message));
+    }
+
     return res.status(200).json({ liked: true, likesCount: post.likesCount });
   } catch (err) {
     if (err.code === 11000) {
@@ -273,6 +317,21 @@ const addComment = async (req, res) => {
     post.commentsCount += 1;
     await post.save();
     const populated = await comment.populate("user", AUTHOR_FIELDS);
+
+    if (post.user && post.user.toString() !== req.userId) {
+      const commentingUser = await User.findById(req.userId).select("name username");
+      const senderName = commentingUser?.name || commentingUser?.username || "Someone";
+      const snippet = text.trim().slice(0, 40) + (text.trim().length > 40 ? "..." : "");
+      createNotification({
+        userId: post.user,
+        senderId: req.userId,
+        type: "post_comment",
+        title: "New Comment",
+        message: `💬 ${senderName} commented: "${snippet}"`,
+        relatedType: "CommunityPost",
+        relatedId: post._id,
+      }).catch((err) => console.log("Comment notification error:", err.message));
+    }
 
     return res.status(201).json({ message: "Comment added", comment: populated, commentsCount: post.commentsCount });
   } catch (err) {

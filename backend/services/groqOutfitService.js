@@ -1,6 +1,6 @@
 const Groq = require("groq-sdk");
 
-const GROQ_TEXT_MODEL = process.env.GROQ_TEXT_MODEL || "openai/gpt-oss-120b";
+const GROQ_TEXT_MODEL = process.env.GROQ_TEXT_MODEL || "llama-3.3-70b-versatile";
 
 let groqClient = null;
 const getClient = () => {

@@ -11,6 +11,8 @@ import {
   resetNotifications,
 } from "../store/notificationSlice";
 
+import { requestNotificationPermission, showBrowserNotification } from "../../../shared/utils/pushNotification";
+
 const useNotifications = () => {
   const dispatch = useDispatch();
   const { user, accessToken } = useSelector((state) => state.auth);
@@ -57,6 +59,7 @@ const useNotifications = () => {
       return;
     }
 
+    requestNotificationPermission();
     fetchNotifications();
 
     const socket = connectSocket(accessToken);
@@ -65,6 +68,7 @@ const useNotifications = () => {
     const handleNew = (notification) => {
       dispatch(notificationReceived(notification));
       setToast(notification);
+      showBrowserNotification(notification.title, notification.message);
       if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
       toastTimerRef.current = setTimeout(() => setToast(null), 6000);
     };

@@ -6,9 +6,10 @@ const { getIO } = require("../config/socket");
  * if the user is connected. Safe to call even if the user is offline —
  * they'll simply see it next time they open the notification bell.
  */
-const createNotification = async ({ userId, type, title, message, relatedType = null, relatedId = null }) => {
+const createNotification = async ({ userId, senderId = null, type, title, message, relatedType = null, relatedId = null }) => {
   const notification = await Notification.create({
     user: userId,
+    sender: senderId,
     type,
     title,
     message,
@@ -16,8 +17,10 @@ const createNotification = async ({ userId, type, title, message, relatedType = 
     relatedId,
   });
 
+  const populated = await Notification.findById(notification._id).populate("sender", "name username profileImage");
+
   try {
-    const plain = notification.toObject({ versionKey: false });
+    const plain = (populated || notification).toObject({ versionKey: false });
     getIO().to(`user:${userId}`).emit("notification:new", plain);
   } catch (err) {
     // Socket not initialized or user not connected — the notification is
@@ -25,7 +28,7 @@ const createNotification = async ({ userId, type, title, message, relatedType = 
     console.log("Could not push live notification:", err.message);
   }
 
-  return notification;
+  return populated || notification;
 };
 
 const getUserNotifications = async (userId, { page = 1, limit = 20 } = {}) => {
@@ -34,7 +37,11 @@ const getUserNotifications = async (userId, { page = 1, limit = 20 } = {}) => {
   const skip = (safePage - 1) * safeLimit;
 
   const [items, unreadCount, total] = await Promise.all([
-    Notification.find({ user: userId }).sort({ createdAt: -1 }).skip(skip).limit(safeLimit),
+    Notification.find({ user: userId })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(safeLimit)
+      .populate("sender", "name username profileImage"),
     Notification.countDocuments({ user: userId, isRead: false }),
     Notification.countDocuments({ user: userId }),
   ]);

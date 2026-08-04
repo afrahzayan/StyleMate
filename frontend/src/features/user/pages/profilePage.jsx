@@ -177,19 +177,6 @@ const ProfilePage = () => {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                    Profile Image URL (Optional)
-                  </label>
-                  <input
-                    type="url"
-                    value={profileImageUrl}
-                    onChange={(e) => setProfileImageUrl(e.target.value)}
-                    placeholder="https://example.com/photo.jpg"
-                    className="w-full px-4 py-2.5 rounded-xl border text-sm font-medium outline-none focus:border-[#4a5280] transition-colors"
-                    style={{ borderColor: "#ede8e0" }}
-                  />
-                </div>
               </div>
 
               <div className="pt-4 flex justify-end">

@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import { Bell, X, CheckCheck, PartyPopper, ShieldAlert, CalendarClock } from "lucide-react";
+import { Bell, X, CheckCheck, PartyPopper, ShieldAlert, CalendarClock, Heart, MessageCircle } from "lucide-react";
 import useNotifications from "../hooks/notificationHook";
 
 const ICONS = {
   report_content_removed: ShieldAlert,
   planner_reminder_day_before: CalendarClock,
   planner_reminder_morning_of: CalendarClock,
+  planner_reminder_due: CalendarClock,
+  post_like: Heart,
+  post_comment: MessageCircle,
   system: PartyPopper,
 };
 
@@ -103,6 +106,7 @@ const NotificationBell = () => {
 
               {items.map((n) => {
                 const Icon = ICONS[n.type] || Bell;
+                const senderImage = n.sender?.profileImage?.url;
                 return (
                   <button
                     key={n._id}
@@ -110,13 +114,17 @@ const NotificationBell = () => {
                     className="w-full text-left px-4 py-3 border-b hover:bg-gray-50 transition-colors flex gap-3"
                     style={{ borderColor: "#f3f0eb", backgroundColor: n.isRead ? "transparent" : "#f5f6fb" }}
                   >
-                    <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
-                      style={{ backgroundColor: "#f0f2fa" }}
-                    >
-                      <Icon size={15} style={{ color: "#4a5280" }} />
-                    </div>
-                    <div className="min-w-0">
+                    {senderImage ? (
+                      <img src={senderImage} alt="" className="w-8 h-8 rounded-full object-cover shrink-0" />
+                    ) : (
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
+                        style={{ backgroundColor: "#f0f2fa" }}
+                      >
+                        <Icon size={15} style={{ color: "#4a5280" }} />
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
                       <p className="text-xs font-bold truncate" style={{ color: "#1c1c2e" }}>
                         {n.title}
                       </p>
