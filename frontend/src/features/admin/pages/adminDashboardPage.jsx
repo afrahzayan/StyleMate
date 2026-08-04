@@ -1,6 +1,6 @@
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { Flag } from "lucide-react";
+import { Flag, ShoppingBag } from "lucide-react";
 import {
   AreaChart,
   Area,
@@ -14,8 +14,7 @@ import {
 } from "recharts";
 import AdminSidebar from "../components/adminSidebar";
 import useAdminDashboard from "../hooks/useAdmiDashboard";
-
-const CATEGORY_COLORS = ["#2d3358", "#4b4d5c", "#cfc9b8", "#c7c9f4", "#23262f", "#8b8fae"];
+import { getStatusHexColor } from "../../../shared/utils/orderStatusColors";
 
 const CATEGORY_BADGE = {
   Inappropriate: { bg: "#fde2e1", color: "#c0392b" },
@@ -43,7 +42,7 @@ const StatCard = ({ label, value, delta, deltaLabel, icon: Icon }) => (
         className="w-9 h-9 rounded-lg flex items-center justify-center"
         style={{ backgroundColor: "#e4e7fb" }}
       >
-        <Icon size={17} style={{ color: "#2d3358" }} />
+        {Icon && <Icon size={17} style={{ color: "#2d3358" }} />}
       </div>
       {delta != null && (
         <span
@@ -62,7 +61,7 @@ const StatCard = ({ label, value, delta, deltaLabel, icon: Icon }) => (
       {label}
     </p>
     <p className="text-2xl font-extrabold mt-1" style={{ color: "#1c1c2e" }}>
-      {value.toLocaleString()}
+      {(value ?? 0).toLocaleString()}
     </p>
   </div>
 );
@@ -72,12 +71,13 @@ const AdminDashboardPage = () => {
   const { user } = useSelector((state) => state.auth);
   const { data, isLoading, error } = useAdminDashboard();
 
-  const overview = data?.overview;
+  const overview = data?.overview || {};
   const activity = (data?.usersActivity || []).map((row) => ({
     ...row,
     label: formatDate(row.date),
   }));
-  const categories = data?.clothesByCategory || [];
+  const ordersByStatus = data?.ordersByStatus || [];
+  const totalOrders = ordersByStatus.reduce((sum, row) => sum + (Number(row?.count) || 0), 0);
   const reports = data?.recentReports || [];
 
   return (
@@ -138,10 +138,10 @@ const AdminDashboardPage = () => {
                   icon={() => <span>🧥</span>}
                 />
                 <StatCard
-                  label="AI Requests"
-                  value={overview.totalAiRequests}
+                  label="Total Orders"
+                  value={totalOrders}
                   delta={null}
-                  icon={() => <span>🤖</span>}
+                  icon={ShoppingBag}
                 />
               </div>
 
@@ -181,13 +181,22 @@ const AdminDashboardPage = () => {
                   </ResponsiveContainer>
                 </div>
 
+                {/* Orders by Status Pie Chart */}
                 <div className="bg-white rounded-2xl border p-5" style={{ borderColor: "#ede8e0" }}>
-                  <h2 className="font-extrabold text-base mb-4" style={{ color: "#1c1c2e" }}>
-                    Clothes by Category
-                  </h2>
-                  {categories.length === 0 ? (
-                    <p className="text-sm" style={{ color: "#7c8197" }}>
-                      No clothes uploaded yet.
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="font-extrabold text-base" style={{ color: "#1c1c2e" }}>
+                      Orders by Status
+                    </h2>
+                    <button
+                      onClick={() => navigate("/admin/orders")}
+                      className="text-xs font-bold text-[#4a5280] hover:underline"
+                    >
+                      View All →
+                    </button>
+                  </div>
+                  {ordersByStatus.length === 0 ? (
+                    <p className="text-sm py-12 text-center" style={{ color: "#7c8197" }}>
+                      No order data available
                     </p>
                   ) : (
                     <>
@@ -195,40 +204,40 @@ const AdminDashboardPage = () => {
                         <ResponsiveContainer width="100%" height={180}>
                           <PieChart>
                             <Pie
-                              data={categories}
+                              data={ordersByStatus}
                               dataKey="count"
-                              nameKey="category"
+                              nameKey="status"
                               innerRadius={55}
                               outerRadius={80}
                               paddingAngle={3}
                             >
-                              {categories.map((entry, index) => (
-                                <Cell key={entry.category} fill={CATEGORY_COLORS[index % CATEGORY_COLORS.length]} />
+                              {ordersByStatus.map((entry) => (
+                                <Cell key={entry.status} fill={getStatusHexColor(entry.status)} />
                               ))}
                             </Pie>
                           </PieChart>
                         </ResponsiveContainer>
                         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                           <p className="text-xl font-extrabold" style={{ color: "#1c1c2e" }}>
-                            {overview.totalClothes.toLocaleString()}
+                            {totalOrders.toLocaleString()}
                           </p>
                           <p className="text-[10px] uppercase tracking-wide" style={{ color: "#7c8197" }}>
-                            Total Items
+                            Total Orders
                           </p>
                         </div>
                       </div>
-                      <div className="space-y-2 mt-3">
-                        {categories.map((entry, index) => (
-                          <div key={entry.category} className="flex items-center justify-between text-sm">
+                      <div className="space-y-2 mt-3 max-h-40 overflow-y-auto pr-1">
+                        {ordersByStatus.map((entry) => (
+                          <div key={entry.status} className="flex items-center justify-between text-xs">
                             <div className="flex items-center gap-2">
                               <span
                                 className="w-2.5 h-2.5 rounded-full"
-                                style={{ backgroundColor: CATEGORY_COLORS[index % CATEGORY_COLORS.length] }}
+                                style={{ backgroundColor: getStatusHexColor(entry.status) }}
                               />
-                              <span style={{ color: "#1c1c2e" }}>{entry.category}</span>
+                              <span className="font-semibold" style={{ color: "#1c1c2e" }}>{entry.status}</span>
                             </div>
-                            <span className="font-semibold" style={{ color: "#1c1c2e" }}>
-                              {entry.percentage}%
+                            <span className="font-extrabold" style={{ color: "#1c1c2e" }}>
+                              {entry.count} ({entry.percentage}%)
                             </span>
                           </div>
                         ))}

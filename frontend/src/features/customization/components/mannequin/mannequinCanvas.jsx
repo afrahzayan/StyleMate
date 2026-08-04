@@ -50,7 +50,10 @@ const MannequinCanvas = ({ selections, lastSelected }) => {
           </div>
         ) : activeLayer ? (
           /* Single Image Layer Preview for Garment, Fabric, Sleeve, Neck, Pattern, etc. */
-          <MannequinLayer key={activeLayer.key} {...activeLayer} />
+          (() => {
+            const { key, ...layerProps } = activeLayer;
+            return <MannequinLayer key={key} {...layerProps} />;
+          })()
         ) : (
           <p className="px-6 text-center text-xs font-semibold text-gray-400">
             No image available for {currentValue}

@@ -23,6 +23,7 @@ const navItems = [
   { label: "AI Suggestions", icon: Sparkles,        path: "/ai-suggestions" },
   { label: "Community Feed", icon: Users,           path: "/community" },
   { label: "Store",          icon: ShoppingBag,     path: "/store" },
+  { label: "My Orders",      icon: ShoppingBag,     path: "/orders" },
 ];
 
 const Sidebar = () => {

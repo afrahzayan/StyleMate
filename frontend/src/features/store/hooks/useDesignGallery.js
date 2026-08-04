@@ -1,26 +1,10 @@
 import { useState } from "react";
 import axiosInstance from "../../../shared/api/axiosInstance";
 
-// Powers the Store Home showcase sections. There is nothing here that
-// touches price-for-sale, stock, or a cart — it's read-only gallery data.
+// Powers the Store Home showcase sections.
 const useDesignGallery = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-
-  const fetchFeaturedDesigns = async (limit = 8) => {
-    setIsLoading(true);
-    setError("");
-    try {
-      const res = await axiosInstance.get("/store/designs/featured", { params: { limit } });
-      return { success: true, designs: res.data };
-    } catch (err) {
-      const msg = err.response?.data?.message || "Failed to load featured designs";
-      setError(msg);
-      return { success: false, message: msg };
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const fetchRecentDesigns = async (limit = 8) => {
     setIsLoading(true);
@@ -46,7 +30,7 @@ const useDesignGallery = () => {
     }
   };
 
-  return { isLoading, error, fetchFeaturedDesigns, fetchRecentDesigns, fetchCategories };
+  return { isLoading, error, fetchRecentDesigns, fetchCategories };
 };
 
 export default useDesignGallery;

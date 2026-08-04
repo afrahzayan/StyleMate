@@ -1,3 +1,4 @@
+const Order = require("../../models/store/orderModel");
 const {
   getAdminDashboardSummary,
   getUsersList,
@@ -204,6 +205,99 @@ const deleteReportContent = async (req, res) => {
   }
 };
 
+// ── order management ────────────────────────────────────────────
+const getAdminOrders = async (req, res) => {
+  try {
+    const orders = await Order.find().populate("user", "name email phone").sort({ createdAt: -1 });
+    return res.status(200).json(orders);
+  } catch (err) {
+    console.error("[getAdminOrders error]:", err);
+    return res.status(500).json({ message: "Failed to fetch orders" });
+  }
+};
+
+const getAdminOrderById = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id).populate("user", "name email phone");
+    if (!order) return res.status(404).json({ message: "Order not found" });
+    return res.status(200).json(order);
+  } catch (err) {
+    console.error("[getAdminOrderById error]:", err);
+    return res.status(500).json({ message: "Failed to fetch order details" });
+  }
+};
+
+const updateOrderStatus = async (req, res) => {
+  try {
+    const newStatus = req.body.status || req.body.orderStatus;
+    const validStatuses = ["Pending", "Confirmed", "Processing", "In Production", "Ready", "Shipped", "Delivered", "Cancelled"];
+    if (!newStatus || !validStatuses.includes(newStatus)) {
+      return res.status(400).json({ message: "Invalid or missing order status value" });
+    }
+
+    const mongoose = require("mongoose");
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid order ID format" });
+    }
+
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ message: "Order not found" });
+
+    const oldStatus = order.orderStatus;
+
+    // Do not create notification or emit socket event if status did not change
+    if (oldStatus === newStatus) {
+      return res.status(200).json({ message: "Order status unchanged.", order });
+    }
+
+    order.orderStatus = newStatus;
+    await order.save();
+
+    // Send notification & emit Socket.IO event to order owner
+    if (order.user) {
+      const targetUserId = order.user._id ? order.user._id.toString() : order.user.toString();
+      const orderShortId = order._id.toString().slice(-6).toUpperCase();
+      const notificationMsg = `Your order #${orderShortId} status has been updated to "${newStatus}".`;
+
+      console.log(`[Admin Order Status Update]: Order #${orderShortId} (${order._id}) changed: "${oldStatus}" -> "${newStatus}". Target user: ${targetUserId}`);
+
+      try {
+        const { createNotification } = require("../../services/notificationService");
+        await createNotification({
+          userId: targetUserId,
+          type: "order_status_update",
+          title: "Order Status Updated",
+          message: notificationMsg,
+          relatedType: "Order",
+          relatedId: order._id,
+        });
+      } catch (notifyErr) {
+        console.error("Failed to send order status notification:", notifyErr.message);
+      }
+
+      try {
+        const { getIO } = require("../../config/socket");
+        const userRoom = `user:${targetUserId}`;
+        getIO().to(userRoom).emit("orderStatusUpdated", {
+          orderId: order._id.toString(),
+          status: newStatus,
+          oldStatus,
+          message: notificationMsg,
+          updatedAt: new Date(),
+        });
+        console.log(`[Socket.IO Server]: Emitting "orderStatusUpdated" to room: ${userRoom}`);
+      } catch (socketErr) {
+        console.error("Failed to emit orderStatusUpdated socket event:", socketErr.message);
+      }
+    }
+
+    return res.status(200).json({ message: "Order status updated successfully.", order });
+  } catch (err) {
+    console.error("[updateOrderStatus error]:", err);
+    return res.status(500).json({ message: "Failed to update order status" });
+  }
+};
+
 module.exports = {
   getDashboardSummary,
   getUsers,
@@ -221,4 +315,7 @@ module.exports = {
   resolveReportById,
   rejectReportById,
   deleteReportContent,
+  getAdminOrders,
+  getAdminOrderById,
+  updateOrderStatus,
 };

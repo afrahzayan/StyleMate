@@ -26,6 +26,7 @@ const communityRoutes = require("./routes/communityRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const adminRoutes = require("./routes/adminRoute");
 const notificationRoutes = require("./routes/notificationRoute");
+const orderRoutes = require("./routes/store/orderRoutes");
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -66,6 +67,7 @@ app.use("/api/community", communityRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/orders", orderRoutes);
 
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok" });
@@ -87,4 +89,4 @@ initReminderWorker();
 const PORT = process.env.PORT || 5000;
 httpServer.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-});
+});

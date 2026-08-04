@@ -32,11 +32,12 @@ const initSocket = (httpServer) => {
   });
 
   io.on("connection", (socket) => {
-    socket.join(`user:${socket.userId}`);
-    console.log(`Socket connected: user ${socket.userId} (${socket.id})`);
+    const userRoom = `user:${socket.userId}`;
+    socket.join(userRoom);
+    console.log(`[Socket.IO Server]: Socket connected (${socket.id}). User joined room: ${userRoom}`);
 
-    socket.on("disconnect", () => {
-      console.log(`Socket disconnected: user ${socket.userId} (${socket.id})`);
+    socket.on("disconnect", (reason) => {
+      console.log(`[Socket.IO Server]: Socket disconnected (${socket.id}) for user ${socket.userId}. Reason: ${reason}`);
     });
   });
 

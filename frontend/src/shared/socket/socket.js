@@ -2,7 +2,11 @@ import { io } from "socket.io-client";
 
 // Same host as axiosInstance's baseURL, but without the /api prefix —
 // Socket.IO does its own HTTP upgrade handshake at the server root.
-const SOCKET_URL = "http://localhost:3000";
+const SOCKET_URL =
+  import.meta.env.VITE_SOCKET_URL ||
+  (typeof window !== "undefined"
+    ? `${window.location.protocol}//${window.location.hostname}:3000`
+    : "http://localhost:3000");
 
 let socket = null;
 
@@ -29,6 +33,10 @@ export const connectSocket = (token) => {
     reconnection: true,
     reconnectionAttempts: 10,
     reconnectionDelay: 1000,
+  });
+
+  socket.on("connect", () => {
+    console.log("Socket connected:", socket.id);
   });
 
   return socket;

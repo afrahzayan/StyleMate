@@ -20,6 +20,9 @@ const {
   resolveReportById,
   rejectReportById,
   deleteReportContent,
+  getAdminOrders,
+  getAdminOrderById,
+  updateOrderStatus,
 } = require("../controllers/admin/adminController");
 
 router.use(protect, requireAdmin);
@@ -45,5 +48,10 @@ router.get("/reports/:id", getReportDetails);
 router.patch("/reports/:id/resolve", resolveReportById);
 router.patch("/reports/:id/reject", rejectReportById);
 router.delete("/reports/:id/content", deleteReportContent);
+
+// Orders (Admin Order Management)
+router.get("/orders", getAdminOrders);
+router.get("/orders/:id", getAdminOrderById);
+router.patch("/orders/:id/status", updateOrderStatus);
 
 module.exports = router;

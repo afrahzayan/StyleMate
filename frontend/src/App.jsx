@@ -32,6 +32,7 @@ import AdminDashboardPage from "./features/admin/pages/adminDashboardPage";
 import AdminUsersPage from "./features/admin/pages/adminUserPage";
 import AdminClothPage from "./features/admin/pages/adminClothPage";
 import AdminReportPage from "./features/admin/pages/adminReportPage";
+import AdminOrdersPage from "./features/admin/pages/adminOrdersPage";
 
 import NotificationBell from "./features/notifications/components/notificationBell";
 
@@ -42,6 +43,9 @@ import StoreHomePage from "./features/store/pages/storeHomePage";
 import CustomizationHomePage from "./features/customization/pages/customizationHomePage";
 import CustomizeWizardPage from "./features/customization/pages/customizeWizardPage";
 import MyDesignsPage from "./features/customization/pages/myDesignsPage";
+
+import CheckoutPage from "./features/checkout/pages/checkoutPage";
+import OrderSuccessPage from "./features/checkout/pages/orderSuccessPage";
 
 const PublicRoute = ({ children }) => {
   const { user } = useSelector((state) => state.auth);
@@ -252,6 +256,14 @@ const App = () => {
             </AdminRoute>
           }
         />
+        <Route
+          path="/admin/orders"
+          element={
+            <AdminRoute>
+              <AdminOrdersPage />
+            </AdminRoute>
+          }
+        />
 
         <Route
           path="/profile"
@@ -300,6 +312,38 @@ const App = () => {
           element={
             <PrivateRoute>
               <MyDesignsPage view="history" />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/designs/orders"
+          element={
+            <PrivateRoute>
+              <MyDesignsPage view="orders" />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/orders"
+          element={
+            <PrivateRoute>
+              <MyDesignsPage view="orders" />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/checkout"
+          element={
+            <PrivateRoute>
+              <CheckoutPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/checkout/success"
+          element={
+            <PrivateRoute>
+              <OrderSuccessPage />
             </PrivateRoute>
           }
         />

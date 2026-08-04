@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { ArrowRight, Sparkles, Scissors, Layers, Shirt } from "lucide-react";
+import { Sparkles, Scissors, Layers, Shirt } from "lucide-react";
 import Sidebar from "../../user/components/sidebar";
 import useDesignGallery from "../hooks/useDesignGallery";
 import DesignGrid from "../components/designGrid";
@@ -9,19 +9,16 @@ import DesignGrid from "../components/designGrid";
 const StoreHomePage = () => {
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
-  const { fetchFeaturedDesigns, fetchRecentDesigns, fetchCategories, isLoading } = useDesignGallery();
-  const [featured, setFeatured] = useState([]);
+  const { fetchRecentDesigns, fetchCategories, isLoading } = useDesignGallery();
   const [recent, setRecent] = useState([]);
   const [categories, setCategories] = useState([]);
 
   useEffect(() => {
     (async () => {
-      const [featuredResult, recentResult, categoriesResult] = await Promise.all([
-        fetchFeaturedDesigns(8),
+      const [recentResult, categoriesResult] = await Promise.all([
         fetchRecentDesigns(8),
         fetchCategories(),
       ]);
-      if (featuredResult.success) setFeatured(featuredResult.designs);
       if (recentResult.success) setRecent(recentResult.designs);
       if (categoriesResult.success) setCategories(categoriesResult.categories);
     })();
@@ -122,27 +119,6 @@ const StoreHomePage = () => {
               </div>
             </section>
           )}
-
-          {/* Featured Custom Designs */}
-          <section className="mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-extrabold" style={{ color: "#1c1c2e" }}>
-                Featured Custom Designs
-              </h3>
-              <Link
-                to="/customize/new"
-                className="flex items-center gap-1 text-xs font-bold hover:underline"
-                style={{ color: "#4a5280" }}
-              >
-                Create New <ArrowRight size={13} />
-              </Link>
-            </div>
-            <DesignGrid
-              designs={featured}
-              isLoading={isLoading}
-              emptyMessage="No custom designs featured yet — create your first custom dress!"
-            />
-          </section>
 
           {/* Recent Designs */}
           <section className="mb-8">

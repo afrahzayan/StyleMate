@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { X, CheckCircle2, Bookmark, Send, Sparkles } from "lucide-react";
 import { buildFinalImagePublicId, buildFinalImageUrl } from "../utils/cloudinaryLayer";
 import { getCombinationDetails } from "../utils/finalImageRegistry";
@@ -18,6 +19,7 @@ const FinishReviewModal = ({
   savedDesignId,
   saveMessage,
 }) => {
+  const navigate = useNavigate();
   const [imgFailed, setImgFailed] = useState(false);
   const [title, setTitle] = useState("");
   const [creationSpeed, setCreationSpeed] = useState("standard");
@@ -28,19 +30,28 @@ const FinishReviewModal = ({
   const finalImageUrl = buildFinalImageUrl(publicId);
   const colorHex = selections.color ? getHexForOption(selections.color) : null;
 
-  const baseTotalPrice = price?.total || 799;
+  const basePrice = price?.base || 799;
+  const customizationCharges = price?.extras || 0;
   const extraFee = creationSpeed === "fast" ? FAST_CREATION_FEE : 0;
-  const finalCalculatedPrice = baseTotalPrice + extraFee;
+  const finalCalculatedPrice = basePrice + customizationCharges + extraFee;
 
   const handleSaveWithSpeed = (customTitle) => {
     onSaveDesign(customTitle, { creationSpeed, fastCreationFee: extraFee, totalPrice: finalCalculatedPrice });
   };
 
   const handleProceedToCheckout = () => {
-    handleSaveWithSpeed(title);
-    if (onSubmitRequest) {
-      onSubmitRequest();
-    }
+    const checkoutData = {
+      title: title || `${selections.clothingType || "Custom"} Design`,
+      selections,
+      basePrice,
+      customizationCharges,
+      creationSpeed,
+      fastCreationFee: extraFee,
+      totalPrice: finalCalculatedPrice,
+      deliveryType: creationSpeed === "fast" ? "Fast Creation" : "Standard Creation",
+    };
+
+    navigate("/checkout", { state: { checkoutData } });
   };
 
   return (

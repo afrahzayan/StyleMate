@@ -5,6 +5,7 @@ const AiSuggestion = require("../models/aiSuggestionModel");
 const Report = require("../models/reportModel");
 const CommunityPost = require("../models/communityPostModel");
 const Comment = require("../models/commentModel");
+const Order = require("../models/store/orderModel");
 const { createNotification } = require("./notificationService");
 
 const ACTIVITY_WINDOW_DAYS = 30;
@@ -89,20 +90,30 @@ const getUsersActivity = async () => {
   return series;
 };
 
-// ── clothes by category (global) ────────────────────────────────
-const getClothesByCategory = async () => {
-  const rows = await Cloth.aggregate([
-    { $match: { isDeleted: false } },
-    { $group: { _id: "$category", count: { $sum: 1 } } },
+// ── orders by status (real database data) ────────────────────────
+const ALL_ORDER_STATUSES = [
+  "Pending",
+  "Confirmed",
+  "Processing",
+  "In Production",
+  "Ready",
+  "Shipped",
+  "Delivered",
+  "Cancelled",
+];
+
+const getOrdersByStatus = async () => {
+  const rows = await Order.aggregate([
+    { $group: { _id: "$orderStatus", count: { $sum: 1 } } },
   ]);
 
-  const countsByCategory = Object.fromEntries(rows.map((r) => [r._id, r.count]));
-  const total = Object.values(countsByCategory).reduce((sum, c) => sum + c, 0);
+  const countsByStatus = Object.fromEntries(rows.map((r) => [r._id, r.count]));
+  const total = Object.values(countsByStatus).reduce((sum, c) => sum + c, 0);
 
-  return CLOTH_CATEGORIES.map((category) => {
-    const count = countsByCategory[category] || 0;
+  return ALL_ORDER_STATUSES.map((status) => {
+    const count = countsByStatus[status] || 0;
     return {
-      category,
+      status,
       count,
       percentage: total > 0 ? Math.round((count / total) * 100) : 0,
     };
@@ -134,16 +145,16 @@ const getPendingReportsCount = async () => {
 };
 
 const getAdminDashboardSummary = async () => {
-  const [overview, usersActivity, clothesByCategory, recentReports, pendingReportsCount] =
+  const [overview, usersActivity, ordersByStatus, recentReports, pendingReportsCount] =
     await Promise.all([
       getOverviewCounts(),
       getUsersActivity(),
-      getClothesByCategory(),
+      getOrdersByStatus(),
       getRecentReports(),
       getPendingReportsCount(),
     ]);
 
-  return { overview, usersActivity, clothesByCategory, recentReports, pendingReportsCount };
+  return { overview, usersActivity, ordersByStatus, recentReports, pendingReportsCount };
 };
 
 // ── user management ─────────────────────────────────────────────

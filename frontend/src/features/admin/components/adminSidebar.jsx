@@ -6,6 +6,7 @@ import {
   Users,
   Shirt,
   BarChart2,
+  ShoppingBag,
   Bot,
   UserCircle,
   LogOut,
@@ -14,6 +15,7 @@ import useAuth from "../../auth/hooks/useAuth";
 
 const navItems = [
   { label: "Dashboard", icon: LayoutGrid, path: "/admin", enabled: true },
+  { label: "Orders",    icon: ShoppingBag, path: "/admin/orders", enabled: true },
   { label: "Users",     icon: Users,      path: "/admin/users", enabled: true },
   { label: "Clothes",   icon: Shirt,      path: "/admin/clothes", enabled: true },
   { label: "Reports",   icon: BarChart2,  path: "/admin/reports", enabled: true },
