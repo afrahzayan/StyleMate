@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { ArrowLeft, CheckCircle2, CreditCard, Truck, ShieldCheck, Sparkles, MapPin, AlertCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, CreditCard, Truck, ShieldCheck, Sparkles, MapPin, AlertCircle, Clock, Zap } from "lucide-react";
 import toast from "react-hot-toast";
 import Sidebar from "../../user/components/sidebar";
 import axiosInstance from "../../../shared/api/axiosInstance";
+
+const FAST_DELIVERY_CHARGE = 300;
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
@@ -34,8 +36,23 @@ const CheckoutPage = () => {
     customizationCharges: 300,
     fastCreationFee: 300,
     totalPrice: 1800,
-    deliveryType: "Fast Creation",
+    deliveryType: "Normal Delivery",
   };
+
+  const {
+    title,
+    clothingType,
+    selections = {},
+    measurements = {},
+    basePrice = 799,
+    customizationCharges = 0,
+  } = checkoutData;
+
+  const [selectedDeliveryType, setSelectedDeliveryType] = useState(
+    checkoutData.deliveryType === "Fast Creation" || checkoutData.deliveryType === "Fast Delivery" || checkoutData.creationSpeed === "fast"
+      ? "Fast Delivery"
+      : "Normal Delivery"
+  );
 
   // Delivery address form state pre-filled with logged-in user details if available
   const [addressForm, setAddressForm] = useState({
@@ -62,17 +79,16 @@ const CheckoutPage = () => {
     }
   }, [searchParams]);
 
-  const {
-    title,
-    clothingType,
-    selections = {},
-    measurements = {},
-    basePrice = 799,
-    customizationCharges = 0,
-    fastCreationFee = 0,
-    totalPrice = 799,
-    deliveryType = "Standard Creation",
-  } = checkoutData;
+  const isFastDelivery = selectedDeliveryType === "Fast Delivery";
+  const fastDeliveryFee = isFastDelivery ? FAST_DELIVERY_CHARGE : 0;
+  const computedTotalPrice = basePrice + customizationCharges + fastDeliveryFee;
+
+  const getExpectedDateStr = (type) => {
+    const days = type === "Fast Delivery" ? 4 : 7;
+    const date = new Date();
+    date.setDate(date.getDate() + days);
+    return date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+  };
 
   const handleInputChange = (field, value) => {
     setAddressForm((prev) => ({ ...prev, [field]: value }));
@@ -123,23 +139,21 @@ const CheckoutPage = () => {
           pincode: addressForm.pincode.trim(),
           country: addressForm.country.trim(),
         },
-        deliveryType,
+        deliveryType: selectedDeliveryType,
         basePrice,
         customizationCharges,
-        fastCreationCharge: fastCreationFee,
-        totalAmount: totalPrice,
+        fastCreationCharge: fastDeliveryFee,
+        totalAmount: computedTotalPrice,
         paymentMethod,
       };
 
       if (paymentMethod === "COD") {
-        // Cash on Delivery Flow
         const res = await axiosInstance.post("/orders/cod", orderPayload);
         if (res.data?.success) {
           toast.success("Order confirmed successfully!");
           navigate("/checkout/success", { state: { order: res.data.order } });
         }
       } else if (paymentMethod === "ONLINE") {
-        // UPI / Online Payment via Stripe Test Mode
         const res = await axiosInstance.post("/orders/create-stripe-session", orderPayload);
         if (res.data?.url) {
           window.location.href = res.data.url;
@@ -176,7 +190,7 @@ const CheckoutPage = () => {
               <h1 className="font-extrabold text-base" style={{ color: "#1c1c2e" }}>
                 Checkout & Review
               </h1>
-              <p className="text-xs text-gray-400">Enter delivery address & select payment method</p>
+              <p className="text-xs text-gray-400">Enter delivery address, choose speed & payment method</p>
             </div>
           </div>
 
@@ -338,6 +352,85 @@ const CheckoutPage = () => {
                 </div>
               </div>
 
+              {/* Delivery Speed Options */}
+              <div className="bg-white rounded-2xl p-6 border shadow-sm space-y-4" style={{ borderColor: "#ede8e0" }}>
+                <h2 className="text-base font-extrabold flex items-center gap-2" style={{ color: "#1c1c2e" }}>
+                  <Truck size={18} className="text-[#4a5280]" />
+                  Delivery Options
+                </h2>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Normal Delivery */}
+                  <div
+                    onClick={() => setSelectedDeliveryType("Normal Delivery")}
+                    className={`p-4 rounded-2xl border cursor-pointer transition-all space-y-2 relative ${
+                      selectedDeliveryType === "Normal Delivery"
+                        ? "border-[#4a5280] bg-[#f5f6fa] ring-1 ring-[#4a5280]"
+                        : "border-gray-200 hover:bg-gray-50"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="deliveryTypeOption"
+                          checked={selectedDeliveryType === "Normal Delivery"}
+                          onChange={() => setSelectedDeliveryType("Normal Delivery")}
+                          className="accent-[#4a5280] w-4 h-4"
+                        />
+                        <span className="font-extrabold text-xs text-[#1c1c2e]">Normal Delivery</span>
+                      </div>
+                      <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                        ₹0
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-gray-500 space-y-1 pl-6">
+                      <p className="flex items-center gap-1 font-medium text-gray-700">
+                        <Clock size={13} className="text-gray-400" />
+                        Expected delivery: 7 days
+                      </p>
+                      <p className="text-gray-400">Estimated date: {getExpectedDateStr("Normal Delivery")}</p>
+                    </div>
+                  </div>
+
+                  {/* Fast Delivery */}
+                  <div
+                    onClick={() => setSelectedDeliveryType("Fast Delivery")}
+                    className={`p-4 rounded-2xl border cursor-pointer transition-all space-y-2 relative ${
+                      selectedDeliveryType === "Fast Delivery"
+                        ? "border-[#4a5280] bg-[#f5f6fa] ring-1 ring-[#4a5280]"
+                        : "border-gray-200 hover:bg-gray-50"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="deliveryTypeOption"
+                          checked={selectedDeliveryType === "Fast Delivery"}
+                          onChange={() => setSelectedDeliveryType("Fast Delivery")}
+                          className="accent-[#4a5280] w-4 h-4"
+                        />
+                        <span className="font-extrabold text-xs text-[#1c1c2e] flex items-center gap-1">
+                          <Zap size={14} className="text-amber-500 fill-amber-500" />
+                          Fast Delivery
+                        </span>
+                      </div>
+                      <span className="text-xs font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                        +₹{FAST_DELIVERY_CHARGE}
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-gray-500 space-y-1 pl-6">
+                      <p className="flex items-center gap-1 font-semibold text-amber-900">
+                        <Clock size={13} className="text-amber-500" />
+                        Expected delivery: 4 days
+                      </p>
+                      <p className="text-gray-400">Estimated date: {getExpectedDateStr("Fast Delivery")}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Customized Dress Specifications */}
               <div className="bg-white rounded-2xl p-6 border shadow-sm" style={{ borderColor: "#ede8e0" }}>
                 <div className="flex items-center justify-between pb-3 mb-4 border-b" style={{ borderColor: "#ede8e0" }}>
@@ -362,7 +455,7 @@ const CheckoutPage = () => {
                   <SpecTile label="Thread Work" value={selections.threadWork} />
                   <SpecTile label="Stone Work" value={selections.stoneWork} />
                   <SpecTile label="Fit" value={selections.fit} />
-                  <SpecTile label="Creation Option" value={deliveryType} highlight />
+                  <SpecTile label="Delivery Choice" value={`${selectedDeliveryType} (${getExpectedDateStr(selectedDeliveryType)})`} highlight />
                 </div>
               </div>
             </div>
@@ -441,15 +534,15 @@ const CheckoutPage = () => {
                     <span>Customization Charges</span>
                     <span className="font-semibold text-gray-800">₹{customizationCharges}</span>
                   </div>
-                  {fastCreationFee > 0 && (
-                    <div className="flex justify-between text-amber-800 font-medium">
-                      <span>Fast Creation Option</span>
-                      <span>+₹{fastCreationFee}</span>
-                    </div>
-                  )}
+                  <div className="flex justify-between">
+                    <span>Delivery Option</span>
+                    <span className={`font-semibold ${isFastDelivery ? "text-amber-800" : "text-emerald-700"}`}>
+                      {selectedDeliveryType} ({isFastDelivery ? `+₹${FAST_DELIVERY_CHARGE}` : "₹0"})
+                    </span>
+                  </div>
                   <div className="pt-3 border-t flex justify-between items-center text-sm" style={{ borderColor: "#ede8e0" }}>
                     <span className="font-extrabold text-[#1c1c2e]">Final Total Price</span>
-                    <span className="text-xl font-black text-[#1c1c2e]">₹{totalPrice}</span>
+                    <span className="text-xl font-black text-[#1c1c2e]">₹{computedTotalPrice}</span>
                   </div>
                 </div>
 

@@ -29,9 +29,12 @@ const communityPostSchema = new Schema(
 
     status: {
       type: String,
-      enum: ["visible", "removed", "under_review","blocked"],
+      enum: ["visible", "removed", "under_review", "blocked"],
       default: "visible",
     },
+    reportCount: { type: Number, default: 0 },
+    removedAt: { type: Date, default: null },
+    removalReason: { type: String, default: null },
   },
   { timestamps: true }
 );

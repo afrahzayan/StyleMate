@@ -50,11 +50,21 @@ const UserOrderDetailModal = ({ order, onClose }) => {
                 {order.orderStatus || "Confirmed"}
               </span>
             </div>
-            <div className="text-right text-xs text-gray-400">
-              <span>Order Date: </span>
-              <span className="font-semibold text-gray-800">
-                {new Date(order.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-              </span>
+            <div className="text-right text-xs text-gray-400 space-y-1">
+              <div>
+                <span>Order Date: </span>
+                <span className="font-semibold text-gray-800">
+                  {new Date(order.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                </span>
+              </div>
+              {order.expectedDeliveryDate && (
+                <div>
+                  <span>Expected Delivery: </span>
+                  <span className="font-bold text-emerald-700">
+                    {new Date(order.expectedDeliveryDate).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 

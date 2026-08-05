@@ -250,6 +250,11 @@ const AdminOrdersPage = () => {
                 <div>
                   <span className="text-xs text-amber-900 font-bold block mb-1">Current Order Status:</span>
                   <StatusBadge status={selectedOrder.orderStatus} />
+                  {selectedOrder.expectedDeliveryDate && (
+                    <span className="text-[11px] font-semibold text-emerald-800 block mt-1">
+                      Expected Delivery: {new Date(selectedOrder.expectedDeliveryDate).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })}
+                    </span>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-2 w-full sm:w-auto">

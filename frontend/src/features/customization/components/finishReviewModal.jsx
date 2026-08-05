@@ -48,7 +48,7 @@ const FinishReviewModal = ({
       creationSpeed,
       fastCreationFee: extraFee,
       totalPrice: finalCalculatedPrice,
-      deliveryType: creationSpeed === "fast" ? "Fast Creation" : "Standard Creation",
+      deliveryType: creationSpeed === "fast" ? "Fast Delivery" : "Normal Delivery",
     };
 
     navigate("/checkout", { state: { checkoutData } });
@@ -73,13 +73,13 @@ const FinishReviewModal = ({
 
         {/* Modal Body */}
         <div className="flex-1 overflow-y-auto p-6 sm:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Left Column: Final 1500x1500 Combined Garment Image */}
+          {/* Left Column: Final Garment Image */}
           <div className="lg:col-span-6 flex flex-col items-center">
             <div className="relative w-full aspect-square max-w-md overflow-hidden rounded-2xl bg-[#f8fafc] border border-gray-200 shadow-inner flex items-center justify-center p-4">
               {!imgFailed && finalImageUrl ? (
                 <img
                   src={finalImageUrl}
-                  alt="Final Combined Custom Design"
+                  alt="Final Custom Design"
                   onError={() => setImgFailed(true)}
                   className="w-full h-full object-contain"
                 />
@@ -91,7 +91,7 @@ const FinishReviewModal = ({
             </div>
           </div>
 
-          {/* Right Column: Full Specifications + Creation Option + Price + Checkout */}
+          {/* Right Column: Full Specifications + Delivery Option + Price + Checkout */}
           <div className="lg:col-span-6 flex flex-col justify-between space-y-6">
             <div>
               <h3 className="text-xl font-extrabold text-[#1c1c2e] mb-1">
@@ -126,9 +126,9 @@ const FinishReviewModal = ({
               </div>
             </div>
 
-            {/* Creation Speed Service Option */}
+            {/* Delivery Option */}
             <div className="p-3.5 rounded-2xl border bg-gray-50/80 space-y-2 text-xs" style={{ borderColor: "#ede8e0" }}>
-              <span className="font-extrabold text-[#1c1c2e] block">Creation Speed:</span>
+              <span className="font-extrabold text-[#1c1c2e] block">Delivery Option:</span>
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                 <label className="flex items-center gap-2 cursor-pointer font-semibold text-gray-700">
                   <input
@@ -139,7 +139,7 @@ const FinishReviewModal = ({
                     onChange={() => setCreationSpeed("standard")}
                     className="accent-[#4a5280]"
                   />
-                  Standard Creation (₹0 extra)
+                  Normal Delivery (7 days, ₹0 extra)
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer font-semibold text-gray-700">
                   <input
@@ -150,7 +150,7 @@ const FinishReviewModal = ({
                     onChange={() => setCreationSpeed("fast")}
                     className="accent-[#4a5280]"
                   />
-                  Fast Creation (+₹{FAST_CREATION_FEE})
+                  Fast Delivery (4 days, +₹{FAST_CREATION_FEE})
                 </label>
               </div>
             </div>
@@ -159,7 +159,7 @@ const FinishReviewModal = ({
             <div className="p-4 rounded-2xl bg-[#f0f2fa] border border-[#4a5280]/20 flex items-center justify-between">
               <div>
                 <span className="text-xs text-gray-500 font-medium">
-                  Total Final Price {creationSpeed === "fast" && <span className="text-emerald-700">(Fast Creation +₹300)</span>}
+                  Total Final Price {creationSpeed === "fast" && <span className="text-emerald-700">(Fast Delivery +₹300)</span>}
                 </span>
                 <p className="text-2xl font-black text-[#1c1c2e]">₹{finalCalculatedPrice}</p>
               </div>

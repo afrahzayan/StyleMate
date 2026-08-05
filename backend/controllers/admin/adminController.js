@@ -301,6 +301,37 @@ const updateOrderStatus = async (req, res) => {
       } catch (socketErr) {
         console.error("Failed to emit orderStatusUpdated socket event:", socketErr.message);
       }
+
+      // Send status update email to user
+      try {
+        const { sendStatusEmail } = require("../../utils/sendEmail");
+        const User = require("../../models/userModel");
+        let recipientEmail = order.deliveryAddress?.email;
+        let recipientName = order.deliveryAddress?.fullName;
+
+        if (!recipientEmail && order.user) {
+          const userDoc = await User.findById(order.user).select("email name");
+          if (userDoc) {
+            recipientEmail = userDoc.email;
+            recipientName = userDoc.name;
+          }
+        }
+
+        if (recipientEmail) {
+          await sendStatusEmail({
+            toEmail: recipientEmail,
+            userName: recipientName || "Customer",
+            orderId: order._id,
+            orderTitle: order.title || order.clothingType,
+            status: newStatus,
+            expectedDeliveryDate: order.expectedDeliveryDate,
+            shortMessage: `Your StyleMate order has been updated to "${newStatus}".`,
+          });
+          console.log(`[Email Notification]: Order status update email sent to ${recipientEmail}`);
+        }
+      } catch (emailErr) {
+        console.error("Failed to send order status update email:", emailErr.message);
+      }
     }
 
     return res.status(200).json({ message: "Order status updated successfully.", order });

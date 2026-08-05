@@ -12,7 +12,7 @@ import MannequinCanvas from "../components/mannequin/mannequinCanvas";
 import PriceBreakdownPanel from "../components/priceBreakeDownPanel";
 import DesignStudioPanel from "../components/designStudioPanel";
 import FinishReviewModal from "../components/finishReviewModal";
-import { resolveLayers } from "../components/mannequin/layerRegistry";
+import { resolveSingleLayer } from "../components/mannequin/layerRegistry";
 
 const QUIZ_STEPS = [
   { group: "gender", label: "Who is this outfit for?" },
@@ -50,7 +50,7 @@ const CustomizeWizardPage = () => {
   const handleSaveDesign = async (customTitle, extraOptions = {}) => {
     setSaveMessage("");
     const designTitle = customTitle || title.trim() || `${state.selections.clothingType || "Custom"} Design`;
-    const [previewLayer] = resolveLayers(state.selections);
+    const previewLayer = resolveSingleLayer(state.lastSelected, state.selections);
     const finalPrice = extraOptions.totalPrice || price.total || 799;
 
     const result = await saveDesign({

@@ -30,7 +30,12 @@ const orderSchema = new Schema(
       pincode: { type: String, required: true },
       country: { type: String, required: true },
     },
-    deliveryType: { type: String, enum: ["Standard Creation", "Fast Creation"], default: "Standard Creation" },
+    deliveryType: {
+      type: String,
+      enum: ["Normal Delivery", "Fast Delivery", "Standard Creation", "Fast Creation"],
+      default: "Normal Delivery",
+    },
+    expectedDeliveryDate: { type: Date, default: null },
     basePrice: { type: Number, required: true },
     customizationCharges: { type: Number, default: 0 },
     fastCreationCharge: { type: Number, default: 0 },

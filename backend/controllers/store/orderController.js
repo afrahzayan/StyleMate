@@ -1,5 +1,6 @@
 const Order = require("../../models/store/orderModel");
 const Stripe = require("stripe");
+const { calculateExpectedDeliveryDate, FAST_DELIVERY_CHARGE } = require("../../config/deliveryConfig");
 
 // Helper function to safely get Stripe instance with clear console error if secret key is missing
 const getStripeInstance = () => {
@@ -52,6 +53,10 @@ const createCodOrder = async (req, res) => {
       return res.status(400).json({ message: "clothingType and totalAmount are required." });
     }
 
+    const isFast = deliveryType === "Fast Delivery" || deliveryType === "Fast Creation";
+    const computedFastCharge = isFast ? (fastCreationCharge || FAST_DELIVERY_CHARGE) : 0;
+    const expectedDeliveryDate = calculateExpectedDeliveryDate(deliveryType);
+
     const newOrder = await Order.create({
       user: req.userId,
       title: title || `${clothingType} Order`,
@@ -60,9 +65,10 @@ const createCodOrder = async (req, res) => {
       measurements,
       deliveryAddress,
       deliveryType,
+      expectedDeliveryDate,
       basePrice,
       customizationCharges,
-      fastCreationCharge,
+      fastCreationCharge: computedFastCharge,
       totalAmount,
       paymentMethod: "COD",
       paymentStatus: "Pending",
@@ -114,6 +120,10 @@ const createStripeSession = async (req, res) => {
       return res.status(400).json({ message: "clothingType and totalAmount are required." });
     }
 
+    const isFast = deliveryType === "Fast Delivery" || deliveryType === "Fast Creation";
+    const computedFastCharge = isFast ? (fastCreationCharge || FAST_DELIVERY_CHARGE) : 0;
+    const expectedDeliveryDate = calculateExpectedDeliveryDate(deliveryType);
+
     // Save pending order in DB
     const pendingOrder = await Order.create({
       user: req.userId,
@@ -123,9 +133,10 @@ const createStripeSession = async (req, res) => {
       measurements,
       deliveryAddress,
       deliveryType,
+      expectedDeliveryDate,
       basePrice,
       customizationCharges,
-      fastCreationCharge,
+      fastCreationCharge: computedFastCharge,
       totalAmount,
       paymentMethod: "ONLINE",
       paymentStatus: "Pending",

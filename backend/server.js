@@ -15,7 +15,6 @@ const customizationOptionRoutes = require("./routes/store/customizationOptionRou
 const priceRoutes = require("./routes/store/priceRoutes");
 const aiRecommendationRoutes = require("./routes/store/aiRecommendationRoutes");
 const myDesignRoutes = require("./routes/store/myDesignRoutes");
-const layerAssetRoutes = require("./routes/store/layerAssetRoutes");
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const clothRoutes = require("./routes/clothRoutes");
@@ -78,7 +77,6 @@ app.use("/api/customization", customizationOptionRoutes);
 app.use("/api/customization", priceRoutes);
 app.use("/api/customization", aiRecommendationRoutes);
 app.use("/api/customization/my-designs", myDesignRoutes);
-app.use("/api/customization/layer-assets", layerAssetRoutes);
 // Socket.io must be attached to the http server (not the express app)
 // so it can share the same port and upgrade HTTP connections to websockets.
 initSocket(httpServer);

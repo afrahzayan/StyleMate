@@ -75,8 +75,8 @@ const createPost = async (req, res) => {
     const parsedTags = Array.isArray(tags)
       ? tags
       : typeof tags === "string" && tags.trim()
-      ? tags.split(",").map((t) => t.trim().replace(/^#/, "")).filter(Boolean)
-      : [];
+        ? tags.split(",").map((t) => t.trim().replace(/^#/, "")).filter(Boolean)
+        : [];
 
     const post = await CommunityPost.create({
       user: req.userId || null,
@@ -364,13 +364,13 @@ const deleteComment = async (req, res) => {
 
 const reportPost = async (req, res) => {
   try {
-    
+
     const { category, description } = req.body;
     if (!category) return res.status(400).json({ message: "Please choose a reason" });
-     
-  
+
+
     const post = await CommunityPost.findOne({ _id: req.params.id, status: "visible" });
-    
+
 
     if (!post) return res.status(404).json({ message: "Post not found" });
 
@@ -386,6 +386,40 @@ const reportPost = async (req, res) => {
       category,
       description: description || "",
     });
+
+    const totalReports = await Report.countDocuments({
+      targetType: "CommunityPost",
+      targetId: post._id,
+    });
+
+    post.reportCount = totalReports;
+
+    if (totalReports >= 5 && post.status === "visible") {
+      post.status = "removed";
+      post.removedAt = new Date();
+      post.removalReason = "Received 5 or more community reports";
+      await post.save();
+
+      if (post.user) {
+        try {
+          const { sendPostRemovedEmail } = require("../utils/sendEmail");
+          const postOwner = await User.findById(post.user).select("email name username");
+          if (postOwner?.email) {
+            await sendPostRemovedEmail({
+              toEmail: postOwner.email,
+              userName: postOwner.name || postOwner.username || "Member",
+              postTitle: post.title || "Community Post",
+              reportCount: totalReports,
+            });
+            console.log(`[Auto Moderation]: Sent post removal email to ${postOwner.email} for post ${post._id}`);
+          }
+        } catch (emailErr) {
+          console.error("Failed to send post removal email:", emailErr.message);
+        }
+      }
+    } else {
+      await post.save();
+    }
 
     return res.status(201).json({ message: "Thanks — our team will review this post" });
   } catch (err) {
