@@ -240,18 +240,30 @@ const updateOrderStatus = async (req, res) => {
       return res.status(400).json({ message: "Invalid order ID format" });
     }
 
-    const order = await Order.findById(req.params.id);
-    if (!order) return res.status(404).json({ message: "Order not found" });
+    const existingOrder = await Order.findById(req.params.id);
+    if (!existingOrder) return res.status(404).json({ message: "Order not found" });
 
-    const oldStatus = order.orderStatus;
+    const oldStatus = existingOrder.orderStatus;
 
     // Do not create notification or emit socket event if status did not change
     if (oldStatus === newStatus) {
-      return res.status(200).json({ message: "Order status unchanged.", order });
+      return res.status(200).json({ message: "Order status unchanged.", order: existingOrder });
     }
 
-    order.orderStatus = newStatus;
-    await order.save();
+    // Use findByIdAndUpdate with a scoped validator instead of fetch->mutate->save().
+    // save() re-validates every required field on the WHOLE document (deliveryAddress,
+    // basePrice, etc.), so any older/incomplete order document throws a ValidationError
+    // and crashes the request with a 500 even though only orderStatus changed.
+    // Updating just the changed path avoids re-validating unrelated fields.
+    const order = await Order.findByIdAndUpdate(
+      req.params.id,
+      { orderStatus: newStatus },
+      {
+        new: true,
+        runValidators: true,
+        context: "query",
+      }
+    );
 
     // Send notification & emit Socket.IO event to order owner
     if (order.user) {

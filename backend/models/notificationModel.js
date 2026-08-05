@@ -15,6 +15,7 @@ const notificationSchema = new Schema(
         "planner_reminder_due",
         "post_like",
         "post_comment",
+        "order_status_update",
         "system",
       ],
       required: true,

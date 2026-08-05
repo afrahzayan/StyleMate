@@ -3,11 +3,7 @@ const jwt = require("jsonwebtoken");
 
 let io = null;
 
-/**
- * Every connected user is joined to a private room named `user:<id>`.
- * To push something to one user from anywhere in the backend, do:
- *   getIO().to(`user:${userId}`).emit("notification:new", payload);
- */
+
 const initSocket = (httpServer) => {
   io = new Server(httpServer, {
     cors: {
@@ -16,8 +12,7 @@ const initSocket = (httpServer) => {
     },
   });
 
-  // Auth handshake: the frontend must connect with
-  //   io(url, { auth: { token: accessToken } })
+  
   io.use((socket, next) => {
     try {
       const token = socket.handshake.auth?.token;

@@ -29,7 +29,7 @@ const communityPostSchema = new Schema(
 
     status: {
       type: String,
-      enum: ["visible", "removed", "under_review"],
+      enum: ["visible", "removed", "under_review","blocked"],
       default: "visible",
     },
   },

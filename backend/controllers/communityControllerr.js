@@ -364,10 +364,14 @@ const deleteComment = async (req, res) => {
 
 const reportPost = async (req, res) => {
   try {
+    
     const { category, description } = req.body;
     if (!category) return res.status(400).json({ message: "Please choose a reason" });
-
+     
+  
     const post = await CommunityPost.findOne({ _id: req.params.id, status: "visible" });
+    
+
     if (!post) return res.status(404).json({ message: "Post not found" });
 
     if (post.user && post.user.toString() === req.userId) {
