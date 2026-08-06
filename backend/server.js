@@ -9,6 +9,7 @@ require("dotenv").config();
 const connectDB = require("./config/db");
 const { initSocket } = require("./config/socket");
 const initReminderWorker = require("./workers/reminderWorker");
+const { startDeliveryCron } = require("./jobs/deliveryCron");
 
 const designRoutes = require("./routes/store/designRoutes");
 const customizationOptionRoutes = require("./routes/store/customizationOptionRoutes");
@@ -83,6 +84,9 @@ initSocket(httpServer);
 
 // Starts listening for due reminder jobs on the planner-reminders queue.
 initReminderWorker();
+
+// Starts automated cron job to monitor upcoming order delivery dates.
+startDeliveryCron();
 
 const PORT = process.env.PORT || 5000;
 httpServer.listen(PORT, () => {

@@ -22,6 +22,7 @@ const {
   deleteReportContent,
   getAdminOrders,
   getAdminOrderById,
+  getUpcomingDeliveries,
   updateOrderStatus,
 } = require("../controllers/admin/adminController");
 
@@ -51,6 +52,7 @@ router.delete("/reports/:id/content", deleteReportContent);
 
 // Orders (Admin Order Management)
 router.get("/orders", getAdminOrders);
+router.get("/orders/upcoming", getUpcomingDeliveries);
 router.get("/orders/:id", getAdminOrderById);
 router.patch("/orders/:id/status", updateOrderStatus);
 

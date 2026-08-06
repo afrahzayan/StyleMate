@@ -6,6 +6,10 @@ const orderSchema = new Schema(
     user: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
     title: { type: String, default: "Custom Dress" },
     clothingType: { type: String, required: true },
+    previewImage: {
+      url: { type: String, default: "" },
+      publicId: { type: String, default: "" },
+    },
     selections: {
       fabric: { type: String },
       color: { type: String },

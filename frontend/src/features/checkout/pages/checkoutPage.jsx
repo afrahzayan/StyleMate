@@ -127,6 +127,7 @@ const CheckoutPage = () => {
       const orderPayload = {
         title,
         clothingType: clothingType || selections.clothingType || "Custom Dress",
+        previewImage: checkoutData.previewImage || {},
         selections,
         measurements,
         deliveryAddress: {

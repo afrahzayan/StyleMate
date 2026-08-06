@@ -1,11 +1,27 @@
-const CustomerDesign = require("../../models/store/customerDesignModel");
+const Order = require("../../models/store/orderModel");
 const PriceRule = require("../../models/store/priceRuleModel");
 
 // GET /api/store/designs/recent
+// Returns recently completed/placed customer orders for the store home showcase.
 const getRecentDesigns = async (req, res) => {
   try {
     const limit = Number(req.query.limit) || 8;
-    const designs = await CustomerDesign.find({ isActive: true }).sort({ createdAt: -1 }).limit(limit);
+    const orders = await Order.find({ orderStatus: { $ne: "Cancelled" } })
+      .populate("user", "name")
+      .sort({ createdAt: -1 })
+      .limit(limit);
+
+    const designs = orders.map((o) => ({
+      _id: o._id,
+      title: o.title || `${o.clothingType} Custom Design`,
+      clothingType: o.clothingType,
+      price: o.totalAmount,
+      previewImage: o.previewImage || {},
+      selections: o.selections || {},
+      user: o.user?.name || "Customer",
+      createdAt: o.createdAt,
+    }));
+
     res.json(designs);
   } catch (err) {
     console.log("[getRecentDesigns] error:", err.message);

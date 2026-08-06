@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { ArrowLeft, CheckCircle2, Bookmark, Send, Sparkles } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Bookmark, Sparkles } from "lucide-react";
 import Sidebar from "../../user/components/sidebar";
 import useCustomizationWizard from "../hooks/useCustomizationWizard";
 import useLivePrice from "../hooks/useLivePrice";
@@ -25,14 +25,24 @@ const QUIZ_STEPS = [
 
 const CustomizeWizardPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useSelector((state) => state.auth);
-  const { state, setOption, setMeasurement, setNotes, nextStep, prevStep } = useCustomizationWizard();
-  const { saveDesign, submitDesignRequest, isLoading: isSaving } = useMyDesigns();
+  const { state, setOption, setMeasurement, setNotes, nextStep, prevStep, loadSavedSelections } = useCustomizationWizard();
+  const { saveDesign, isLoading: isSaving } = useMyDesigns();
   const [phase, setPhase] = useState("quiz"); // "quiz" | "studio"
   const [isReviewOpen, setIsReviewOpen] = useState(false);
   const [title, setTitle] = useState("");
-  const [savedDesignId, setSavedDesignId] = useState(null);
   const [saveMessage, setSaveMessage] = useState("");
+
+  // Pre-load saved design selections if user arrived via "Edit Design"
+  useEffect(() => {
+    const editDesign = location.state?.editDesign || location.state?.savedDesign;
+    if (editDesign && editDesign.selections) {
+      loadSavedSelections(editDesign.selections);
+      if (editDesign.title) setTitle(editDesign.title);
+      setPhase("studio");
+    }
+  }, [location.state]);
 
   const { price, isCalculating } = useLivePrice(state.selections.clothingType, state.selections);
 
@@ -66,18 +76,12 @@ const CustomizeWizardPage = () => {
       creationSpeed: extraOptions.creationSpeed || "standard",
       fastCreationFee: extraOptions.fastCreationFee || 0,
     });
+
     if (result.success) {
-      setSavedDesignId(result.design._id);
-      setSaveMessage("Design saved successfully! Proceeding to checkout...");
+      setSaveMessage("Design saved to Saved Designs!");
     } else {
       setSaveMessage(result.message);
     }
-  };
-
-  const handleSubmitRequest = async () => {
-    if (!savedDesignId) return;
-    const result = await submitDesignRequest(savedDesignId);
-    setSaveMessage(result.success ? "Design request submitted — our tailoring team will contact you!" : result.message);
   };
 
   return (
@@ -242,19 +246,8 @@ const CustomizeWizardPage = () => {
                     {isSaving ? "Saving..." : "Save Custom Design"}
                   </button>
 
-                  {savedDesignId && (
-                    <button
-                      onClick={handleSubmitRequest}
-                      className="w-full py-3 rounded-xl text-xs font-bold text-gray-700 border flex items-center justify-center gap-2 transition-all hover:bg-gray-50"
-                      style={{ borderColor: "#ede8e0" }}
-                    >
-                      <Send size={15} className="text-[#4a5280]" />
-                      Submit Design Request
-                    </button>
-                  )}
-
                   {saveMessage && (
-                    <div className="p-3 rounded-xl bg-gray-50 border text-xs font-semibold text-center text-gray-700 flex items-center justify-center gap-1.5" style={{ borderColor: "#ede8e0" }}>
+                    <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs font-semibold text-center text-emerald-800 flex items-center justify-center gap-1.5">
                       <CheckCircle2 size={15} className="text-emerald-600" />
                       <span>{saveMessage}</span>
                     </div>
@@ -280,9 +273,7 @@ const CustomizeWizardPage = () => {
         selections={state.selections}
         price={price}
         onSaveDesign={handleSaveDesign}
-        onSubmitRequest={handleSubmitRequest}
         isSaving={isSaving}
-        savedDesignId={savedDesignId}
         saveMessage={saveMessage}
       />
     </div>

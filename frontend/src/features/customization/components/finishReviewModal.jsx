@@ -14,9 +14,7 @@ const FinishReviewModal = ({
   selections,
   price,
   onSaveDesign,
-  onSubmitRequest,
   isSaving,
-  savedDesignId,
   saveMessage,
 }) => {
   const navigate = useNavigate();
@@ -42,6 +40,11 @@ const FinishReviewModal = ({
   const handleProceedToCheckout = () => {
     const checkoutData = {
       title: title || `${selections.clothingType || "Custom"} Design`,
+      clothingType: selections.clothingType || "Custom Dress",
+      previewImage: {
+        url: finalImageUrl || "",
+        publicId: publicId || "",
+      },
       selections,
       basePrice,
       customizationCharges,

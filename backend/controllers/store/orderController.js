@@ -33,6 +33,7 @@ const createCodOrder = async (req, res) => {
     const {
       title,
       clothingType,
+      previewImage,
       selections = {},
       measurements = {},
       deliveryAddress,
@@ -61,6 +62,7 @@ const createCodOrder = async (req, res) => {
       user: req.userId,
       title: title || `${clothingType} Order`,
       clothingType,
+      previewImage,
       selections,
       measurements,
       deliveryAddress,
@@ -100,6 +102,7 @@ const createStripeSession = async (req, res) => {
     const {
       title,
       clothingType,
+      previewImage,
       selections = {},
       measurements = {},
       deliveryAddress,
@@ -129,6 +132,7 @@ const createStripeSession = async (req, res) => {
       user: req.userId,
       title: title || `${clothingType} Order`,
       clothingType,
+      previewImage,
       selections,
       measurements,
       deliveryAddress,

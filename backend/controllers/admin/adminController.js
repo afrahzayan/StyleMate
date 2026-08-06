@@ -341,6 +341,26 @@ const updateOrderStatus = async (req, res) => {
   }
 };
 
+const getUpcomingDeliveries = async (req, res) => {
+  try {
+    const now = new Date();
+    const threeDaysFromNow = new Date();
+    threeDaysFromNow.setDate(now.getDate() + 3);
+
+    const orders = await Order.find({
+      orderStatus: { $nin: ["Delivered", "Cancelled"] },
+      expectedDeliveryDate: { $lte: threeDaysFromNow, $ne: null },
+    })
+      .populate("user", "name email phone")
+      .sort({ expectedDeliveryDate: 1 });
+
+    return res.status(200).json(orders);
+  } catch (err) {
+    console.error("[getUpcomingDeliveries error]:", err);
+    return res.status(500).json({ message: "Failed to fetch upcoming deliveries" });
+  }
+};
+
 module.exports = {
   getDashboardSummary,
   getUsers,
@@ -360,5 +380,6 @@ module.exports = {
   deleteReportContent,
   getAdminOrders,
   getAdminOrderById,
+  getUpcomingDeliveries,
   updateOrderStatus,
 };

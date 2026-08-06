@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Share2, Download, Send, Trash2, Scissors, ShoppingBag, Eye } from "lucide-react";
+import { ArrowLeft, Share2, Download, Trash2, Scissors, ShoppingBag, Eye, Edit3, CreditCard, X, Sparkles } from "lucide-react";
 import toast from "react-hot-toast";
 import Sidebar from "../../user/components/sidebar";
 import useMyDesigns from "../hooks/useMyDesigns";
@@ -9,7 +9,9 @@ import { downloadDesignSummary } from "../utils/downloadDesignSummary";
 import axiosInstance from "../../../shared/api/axiosInstance";
 import { getStatusBadgeClass } from "../../../shared/utils/orderStatusColors";
 import UserOrderDetailModal from "../components/userOrderDetailModal";
-import { connectSocket, getSocket } from "../../../shared/socket/socket";
+import { connectSocket } from "../../../shared/socket/socket";
+import { getHexForOption } from "../components/questionnaire/optionStep";
+import { buildFinalImagePublicId, buildFinalImageUrl } from "../utils/cloudinaryLayer";
 
 const CLOTHING_TYPE_IMAGES = {
   Shirt: "https://res.cloudinary.com/kerygwxk/image/upload/v1700000000/StyleMate/onboarding/clothing/shirt.png",
@@ -17,12 +19,17 @@ const CLOTHING_TYPE_IMAGES = {
   Kurta: "https://res.cloudinary.com/kerygwxk/image/upload/v1700000000/StyleMate/onboarding/clothing/kurta.png",
   Kurti: "https://res.cloudinary.com/kerygwxk/image/upload/v1700000000/StyleMate/onboarding/clothing/kurti.png",
   Gown: "https://res.cloudinary.com/kerygwxk/image/upload/v1700000000/StyleMate/onboarding/clothing/gown.png",
-  Dress: "https://res.cloudinary.com/kerygwxk/image/upload/v1700000000/StyleMate/onboarding/clothing/dress.png",
+  Dress: "https://res.cloudinary.com/kerygwxk/image/upload/v1700000000/StyleMate/onboarding/dress.png",
 };
 
 const getClothingImage = (item) => {
   if (item?.previewImage?.url && !item.previewImage.url.includes("placeholder")) {
     return item.previewImage.url;
+  }
+  if (item?.selections && Object.keys(item.selections).length > 0) {
+    const publicId = buildFinalImagePublicId(item.selections);
+    const cloudUrl = buildFinalImageUrl(publicId);
+    if (cloudUrl) return cloudUrl;
   }
   const type = item?.clothingType || item?.selections?.clothingType || "Shirt";
   return CLOTHING_TYPE_IMAGES[type] || CLOTHING_TYPE_IMAGES.Shirt;
@@ -35,14 +42,19 @@ const MyDesignsPage = ({ view: initialView = "saved" }) => {
   const [activeTab, setActiveTab] = useState(activeTabFromQuery || initialView);
 
   const { user, accessToken } = useSelector((state) => state.auth);
-  const { fetchMyDesigns, submitDesignRequest, deleteDesign, isLoading: isDesignsLoading } = useMyDesigns();
+  const { fetchMyDesigns, deleteDesign, isLoading: isDesignsLoading } = useMyDesigns();
   const [designs, setDesigns] = useState([]);
   const [orders, setOrders] = useState([]);
   const [isOrdersLoading, setIsOrdersLoading] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [selectedSavedDesign, setSelectedSavedDesign] = useState(null);
 
   const loadData = async () => {
-    if (activeTab === "orders") {
+    if (activeTab === "saved") {
+      const result = await fetchMyDesigns("saved");
+      if (result.success) setDesigns(result.designs);
+    } else {
+      // Both "history" and "orders" query placed orders from Order collection
       setIsOrdersLoading(true);
       try {
         const res = await axiosInstance.get("/orders");
@@ -52,9 +64,6 @@ const MyDesignsPage = ({ view: initialView = "saved" }) => {
       } finally {
         setIsOrdersLoading(false);
       }
-    } else {
-      const result = await fetchMyDesigns(activeTab === "saved" ? "saved" : undefined);
-      if (result.success) setDesigns(result.designs);
     }
   };
 
@@ -67,8 +76,6 @@ const MyDesignsPage = ({ view: initialView = "saved" }) => {
     if (!socket) return undefined;
 
     const handleOrderStatusUpdate = (data) => {
-      console.log("LIVE ORDER UPDATE RECEIVED:", data);
-
       setOrders((currentOrders) =>
         currentOrders.map((order) =>
           order._id === data.orderId
@@ -114,21 +121,43 @@ const MyDesignsPage = ({ view: initialView = "saved" }) => {
     const shareUrl = `${window.location.origin}/customize?design=${design._id}`;
     try {
       await navigator.clipboard.writeText(shareUrl);
-      alert("Design link copied to clipboard!");
+      toast.success("Design link copied to clipboard!");
     } catch {
       alert(shareUrl);
     }
   };
 
-  const handleSubmit = async (design) => {
-    const result = await submitDesignRequest(design._id);
-    if (result.success) loadData();
-  };
-
   const handleDelete = async (design) => {
     if (!window.confirm("Delete this design?")) return;
     const result = await deleteDesign(design._id);
-    if (result.success) loadData();
+    if (result.success) {
+      toast.success("Saved design deleted.");
+      loadData();
+    }
+  };
+
+  const handleEditDesign = (design) => {
+    navigate("/customize/new", { state: { editDesign: design } });
+  };
+
+  const handleProceedCheckoutFromSaved = (design) => {
+    const checkoutData = {
+      title: design.title || `${design.clothingType || "Custom"} Design`,
+      clothingType: design.clothingType || "Custom Dress",
+      previewImage: {
+        url: getClothingImage(design),
+        publicId: design.previewImage?.publicId || "",
+      },
+      selections: design.selections || {},
+      basePrice: design.price || 799,
+      customizationCharges: 0,
+      creationSpeed: design.creationSpeed || "standard",
+      fastCreationFee: design.fastCreationFee || 0,
+      totalPrice: design.price || 799,
+      deliveryType: design.creationSpeed === "fast" ? "Fast Delivery" : "Normal Delivery",
+    };
+
+    navigate("/checkout", { state: { checkoutData } });
   };
 
   return (
@@ -149,7 +178,11 @@ const MyDesignsPage = ({ view: initialView = "saved" }) => {
               <ArrowLeft size={18} style={{ color: "#1c1c2e" }} />
             </button>
             <h1 className="font-extrabold text-base" style={{ color: "#1c1c2e" }}>
-              {activeTab === "saved" ? "Saved Custom Designs" : activeTab === "orders" ? "My Custom Orders" : "Design History"}
+              {activeTab === "saved"
+                ? "Saved Custom Designs"
+                : activeTab === "orders"
+                ? "My Custom Orders"
+                : "Design History (Ordered)"}
             </h1>
           </div>
 
@@ -216,14 +249,128 @@ const MyDesignsPage = ({ view: initialView = "saved" }) => {
             </button>
           </div>
 
-          {/* Orders View */}
-          {activeTab === "orders" ? (
+          {/* Saved Designs Tab View */}
+          {activeTab === "saved" && (
+            <div>
+              {isDesignsLoading && <p className="text-xs text-gray-400">Loading your saved designs...</p>}
+
+              {!isDesignsLoading && designs.length === 0 && (
+                <div className="bg-white rounded-2xl p-12 text-center border" style={{ borderColor: "#ede8e0" }}>
+                  <p className="text-sm font-semibold text-gray-600 mb-4">
+                    You haven't saved any custom designs yet.
+                  </p>
+                  <button
+                    onClick={() => navigate("/customize/new")}
+                    className="px-5 py-2.5 rounded-xl text-xs font-bold text-white shadow"
+                    style={{ backgroundColor: "#4a5280" }}
+                  >
+                    Start Designing Now
+                  </button>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {designs.map((design) => (
+                  <div
+                    key={design._id}
+                    className="bg-white rounded-2xl border overflow-hidden shadow-sm transition-all hover:shadow-md flex flex-col justify-between"
+                    style={{ borderColor: "#ede8e0" }}
+                  >
+                    <div className="aspect-[3/4] bg-gray-50 relative overflow-hidden group">
+                      <img
+                        src={getClothingImage(design)}
+                        alt={design.title}
+                        className="h-full w-full object-cover"
+                      />
+                      <span className="absolute top-3 right-3 rounded-full bg-white/90 backdrop-blur-sm px-2.5 py-0.5 text-[10px] font-bold uppercase text-gray-700 shadow-sm border border-gray-200">
+                        Saved Design
+                      </span>
+                    </div>
+
+                    <div className="p-4 space-y-3 flex-1">
+                      <div>
+                        <h3 className="truncate text-sm font-extrabold text-[#1c1c2e]">{design.title}</h3>
+                        <p className="text-xs font-bold text-[#4a5280] mt-0.5">Est. ₹{design.price}</p>
+                      </div>
+
+                      <div className="pt-2 text-xs space-y-1 text-gray-500 border-t" style={{ borderColor: "#ede8e0" }}>
+                        <div className="flex justify-between">
+                          <span>Clothing Type:</span>
+                          <span className="font-bold text-gray-800">{design.clothingType}</span>
+                        </div>
+                        {design.selections?.fabric && (
+                          <div className="flex justify-between">
+                            <span>Fabric:</span>
+                            <span className="font-semibold text-gray-700">{design.selections.fabric}</span>
+                          </div>
+                        )}
+                        {design.selections?.color && (
+                          <div className="flex justify-between">
+                            <span>Color:</span>
+                            <span className="font-semibold text-gray-700">{design.selections.color}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="p-3 bg-gray-50/50 border-t space-y-2" style={{ borderColor: "#ede8e0" }}>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setSelectedSavedDesign(design)}
+                          className="flex-1 py-2 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-1 transition-all hover:opacity-90 shadow-sm"
+                          style={{ backgroundColor: "#2d3358" }}
+                        >
+                          <Eye size={13} />
+                          View Details
+                        </button>
+                        <button
+                          onClick={() => handleEditDesign(design)}
+                          className="px-3 py-2 rounded-xl text-xs font-bold text-[#4a5280] border border-[#4a5280]/20 bg-white hover:bg-gray-50 flex items-center justify-center gap-1 shadow-xs"
+                        >
+                          <Edit3 size={13} />
+                          Edit
+                        </button>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-2 pt-1 border-t" style={{ borderColor: "#ede8e0" }}>
+                        <button
+                          onClick={() => downloadDesignSummary(design)}
+                          className="flex items-center gap-1 text-[11px] font-semibold text-gray-600 hover:text-gray-900"
+                        >
+                          <Download size={12} /> Summary
+                        </button>
+                        <button
+                          onClick={() => handleShare(design)}
+                          className="flex items-center gap-1 text-[11px] font-semibold text-gray-600 hover:text-gray-900"
+                        >
+                          <Share2 size={12} /> Share
+                        </button>
+                        <button
+                          onClick={() => handleDelete(design)}
+                          className="flex items-center gap-1 text-[11px] font-semibold text-rose-600 hover:underline ml-auto"
+                        >
+                          <Trash2 size={12} /> Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Design History & My Orders Views (Queries placed orders) */}
+          {(activeTab === "history" || activeTab === "orders") && (
             <div>
               {isOrdersLoading && <p className="text-xs text-gray-400">Loading your placed orders...</p>}
 
               {!isOrdersLoading && orders.length === 0 && (
                 <div className="bg-white rounded-2xl p-12 text-center border" style={{ borderColor: "#ede8e0" }}>
-                  <p className="text-sm font-semibold text-gray-600 mb-4">You haven't placed any custom dress orders yet.</p>
+                  <p className="text-sm font-semibold text-gray-600 mb-4">
+                    {activeTab === "history"
+                      ? "No placed order history found. Customize and order a dress to add to your history!"
+                      : "You haven't placed any custom dress orders yet."}
+                  </p>
                   <button
                     onClick={() => navigate("/customize/new")}
                     className="px-5 py-2.5 rounded-xl text-xs font-bold text-white shadow"
@@ -306,91 +453,135 @@ const MyDesignsPage = ({ view: initialView = "saved" }) => {
                 ))}
               </div>
             </div>
-          ) : (
-            /* Designs View (Saved / History) */
-            <div>
-              {isDesignsLoading && <p className="text-xs text-gray-400">Loading your designs...</p>}
-
-              {!isDesignsLoading && designs.length === 0 && (
-                <div className="bg-white rounded-2xl p-12 text-center border" style={{ borderColor: "#ede8e0" }}>
-                  <p className="text-sm font-semibold text-gray-600 mb-4">
-                    {activeTab === "saved" ? "You haven't saved any custom designs yet." : "No design history found."}
-                  </p>
-                  <button
-                    onClick={() => navigate("/customize/new")}
-                    className="px-5 py-2.5 rounded-xl text-xs font-bold text-white shadow"
-                    style={{ backgroundColor: "#4a5280" }}
-                  >
-                    Start Designing Now
-                  </button>
-                </div>
-              )}
-
-              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {designs.map((design) => (
-                  <div
-                    key={design._id}
-                    className="bg-white rounded-2xl border overflow-hidden shadow-sm transition-all hover:shadow-md"
-                    style={{ borderColor: "#ede8e0" }}
-                  >
-                    <div className="aspect-[3/4] bg-gray-50 relative overflow-hidden">
-                      <img
-                        src={getClothingImage(design)}
-                        alt={design.title}
-                        className="h-full w-full object-cover"
-                      />
-                      <span className="absolute top-3 right-3 rounded-full bg-white/90 backdrop-blur-sm px-2.5 py-0.5 text-[10px] font-bold uppercase text-gray-700 shadow-sm border border-gray-200">
-                        {design.status}
-                      </span>
-                    </div>
-                    <div className="p-4">
-                      <div className="flex items-center justify-between">
-                        <h3 className="truncate text-sm font-extrabold" style={{ color: "#1c1c2e" }}>
-                          {design.title}
-                        </h3>
-                      </div>
-                      <p className="mt-0.5 text-xs font-bold text-[#4a5280]">Est. ₹{design.price}</p>
-                      <div className="mt-4 flex flex-wrap gap-2 pt-3 border-t" style={{ borderColor: "#ede8e0" }}>
-                        <button
-                          onClick={() => downloadDesignSummary(design)}
-                          className="flex items-center gap-1 rounded-xl border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50"
-                        >
-                          <Download size={13} /> Summary
-                        </button>
-                        <button
-                          onClick={() => handleShare(design)}
-                          className="flex items-center gap-1 rounded-xl border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50"
-                        >
-                          <Share2 size={13} /> Share
-                        </button>
-                        {design.status === "saved" && (
-                          <button
-                            onClick={() => handleSubmit(design)}
-                            className="flex items-center gap-1 rounded-xl bg-[#4a5280] px-3 py-1.5 text-xs font-bold text-white shadow-sm"
-                          >
-                            <Send size={13} /> Submit
-                          </button>
-                        )}
-                        <button
-                          onClick={() => handleDelete(design)}
-                          className="flex items-center gap-1 rounded-xl border border-rose-200 px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 ml-auto"
-                        >
-                          <Trash2 size={13} />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
           )}
         </main>
       </div>
+
+      {/* Saved Design Details Modal */}
+      {selectedSavedDesign && (
+        <SavedDesignDetailsModal
+          design={selectedSavedDesign}
+          onClose={() => setSelectedSavedDesign(null)}
+          onEdit={() => {
+            handleEditDesign(selectedSavedDesign);
+            setSelectedSavedDesign(null);
+          }}
+          onCheckout={() => {
+            handleProceedCheckoutFromSaved(selectedSavedDesign);
+            setSelectedSavedDesign(null);
+          }}
+        />
+      )}
 
       {/* User Order Details Modal */}
       {selectedOrder && (
         <UserOrderDetailModal order={selectedOrder} onClose={() => setSelectedOrder(null)} />
       )}
+    </div>
+  );
+};
+
+// Sub-component: Saved Design Details Modal
+const SavedDesignDetailsModal = ({ design, onClose, onEdit, onCheckout }) => {
+  const selections = design?.selections || {};
+  const colorHex = selections.color ? getHexForOption(selections.color) : null;
+  const imageSrc = getClothingImage(design);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
+      <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden my-6 border border-gray-100 flex flex-col max-h-[90vh]">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 bg-[#1c1c2e] text-white shrink-0">
+          <div className="flex items-center gap-2">
+            <Sparkles size={20} className="text-amber-400" />
+            <h2 className="text-lg font-extrabold tracking-wide">{design.title || "Saved Design Details"}</h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          <div className="flex flex-col sm:flex-row items-center gap-6">
+            <div className="w-44 h-56 bg-gray-100 rounded-2xl overflow-hidden border shadow-sm shrink-0" style={{ borderColor: "#ede8e0" }}>
+              <img src={imageSrc} alt={design.title} className="w-full h-full object-cover" />
+            </div>
+
+            <div className="flex-1 space-y-2 w-full">
+              <h3 className="font-extrabold text-lg text-[#1c1c2e]">{design.clothingType}</h3>
+              <p className="text-xl font-black text-[#4a5280]">Est. Price: ₹{design.price}</p>
+              <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-xl text-xs text-amber-900 font-semibold">
+                Status: <span className="uppercase font-bold">Saved Design</span> (Not yet ordered)
+              </div>
+            </div>
+          </div>
+
+          {/* Full Customization Specifications */}
+          <div className="space-y-3">
+            <h4 className="font-extrabold text-sm text-[#1c1c2e] border-b pb-2" style={{ borderColor: "#ede8e0" }}>
+              Customization Options & Specifications
+            </h4>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
+              <SpecItem label="Clothing Type" value={design.clothingType} />
+              <SpecItem label="Gender" value={selections.gender} />
+              <SpecItem label="Fabric" value={selections.fabric} />
+              <SpecItem
+                label="Color"
+                value={
+                  <span className="flex items-center gap-1.5">
+                    {selections.color || "Default"}
+                    {colorHex && (
+                      <span className="w-3 h-3 rounded-full border border-black/20" style={{ backgroundColor: colorHex }} />
+                    )}
+                  </span>
+                }
+              />
+              <SpecItem label="Sleeve Type" value={selections.sleeveType} />
+              <SpecItem label="Neck Type" value={selections.neckType} />
+              <SpecItem label="Length" value={selections.length} />
+              <SpecItem label="Pattern" value={selections.pattern} />
+              <SpecItem label="Embroidery" value={selections.embroidery} />
+              <SpecItem label="Thread Work" value={selections.threadWork} />
+              <SpecItem label="Stone Work" value={selections.stoneWork} />
+              <SpecItem label="Fit" value={selections.fit} />
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row items-center gap-3 pt-4 border-t" style={{ borderColor: "#ede8e0" }}>
+            <button
+              onClick={onEdit}
+              className="w-full sm:w-1/2 py-3 rounded-xl text-xs font-bold border border-[#4a5280] text-[#4a5280] bg-white hover:bg-gray-50 flex items-center justify-center gap-2 shadow-xs transition-colors"
+            >
+              <Edit3 size={15} />
+              Edit Design
+            </button>
+
+            <button
+              onClick={onCheckout}
+              className="w-full sm:w-1/2 py-3 rounded-xl text-xs font-extrabold text-white bg-[#1c1c2e] hover:opacity-90 flex items-center justify-center gap-2 shadow-md transition-opacity"
+            >
+              <CreditCard size={15} className="text-amber-400" />
+              Checkout
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const SpecItem = ({ label, value }) => {
+  if (!value) return null;
+  return (
+    <div className="p-2 bg-gray-50 rounded-xl border border-gray-100">
+      <span className="text-[10px] text-gray-400 font-medium block">{label}</span>
+      <span className="font-bold text-xs text-gray-800">{value}</span>
     </div>
   );
 };

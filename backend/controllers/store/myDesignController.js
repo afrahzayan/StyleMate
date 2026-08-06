@@ -49,24 +49,6 @@ const listMyDesigns = async (req, res) => {
   }
 };
 
-// PATCH /api/customization/my-designs/:id/submit  (protect)
-// Marks a saved design as submitted for the design team to follow up on.
-// There is no payment or fulfillment attached to this — it's a request only.
-const submitDesignRequest = async (req, res) => {
-  try {
-    const design = await CustomerDesign.findOneAndUpdate(
-      { _id: req.params.id, user: req.userId },
-      { status: "submitted" },
-      { new: true }
-    );
-    if (!design) return res.status(404).json({ message: "Design not found" });
-    res.json(design);
-  } catch (err) {
-    console.log("[submitDesignRequest] error:", err.message);
-    res.status(400).json({ message: "Failed to submit design request" });
-  }
-};
-
 // DELETE /api/customization/my-designs/:id  (protect)
 const deleteMyDesign = async (req, res) => {
   try {
@@ -79,4 +61,4 @@ const deleteMyDesign = async (req, res) => {
   }
 };
 
-module.exports = { saveDesign, listMyDesigns, submitDesignRequest, deleteMyDesign };
+module.exports = { saveDesign, listMyDesigns, deleteMyDesign };

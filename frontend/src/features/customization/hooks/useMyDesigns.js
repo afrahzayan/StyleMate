@@ -35,15 +35,6 @@ const useMyDesigns = () => {
     }
   };
 
-  const submitDesignRequest = async (id) => {
-    try {
-      const res = await axiosInstance.patch(`/customization/my-designs/${id}/submit`);
-      return { success: true, design: res.data };
-    } catch (err) {
-      return { success: false, message: err.response?.data?.message || "Failed to submit design request" };
-    }
-  };
-
   const deleteDesign = async (id) => {
     try {
       await axiosInstance.delete(`/customization/my-designs/${id}`);
@@ -53,7 +44,7 @@ const useMyDesigns = () => {
     }
   };
 
-  return { isLoading, error, saveDesign, fetchMyDesigns, submitDesignRequest, deleteDesign };
+  return { isLoading, error, saveDesign, fetchMyDesigns, deleteDesign };
 };
 
 export default useMyDesigns;

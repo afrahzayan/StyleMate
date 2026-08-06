@@ -70,6 +70,11 @@ function reducer(state, action) {
     case "APPLY_AI_RECOMMENDATION":
       // AI proposes, user disposes — still fully editable after this.
       return { ...state, selections: { ...state.selections, ...action.selections } };
+    case "LOAD_SAVED_SELECTIONS":
+      return {
+        ...state,
+        selections: { ...state.selections, ...action.selections },
+      };
     default:
       return state;
   }
@@ -87,6 +92,7 @@ const useCustomizationWizard = () => {
   const prevStep = () => dispatch({ type: "PREV_STEP" });
   const goToStep = (step) => dispatch({ type: "GO_TO_STEP", step });
   const applyAiRecommendation = (selections) => dispatch({ type: "APPLY_AI_RECOMMENDATION", selections });
+  const loadSavedSelections = (selections) => dispatch({ type: "LOAD_SAVED_SELECTIONS", selections });
 
   return {
     state,
@@ -99,6 +105,7 @@ const useCustomizationWizard = () => {
     prevStep,
     goToStep,
     applyAiRecommendation,
+    loadSavedSelections,
   };
 };
 
