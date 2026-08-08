@@ -25,7 +25,7 @@ const FinishReviewModal = ({
   if (!isOpen) return null;
 
   const publicId = buildFinalImagePublicId(selections);
-  const finalImageUrl = buildFinalImageUrl(publicId);
+  const finalImageUrl = buildFinalImageUrl(publicId, { clothingType: selections?.clothingType });
   const colorHex = selections.color ? getHexForOption(selections.color) : null;
 
   const basePrice = price?.base || 799;

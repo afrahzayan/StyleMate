@@ -28,35 +28,36 @@ export const buildLayerPublicId = (group, value) => {
   return `${ROOT_FOLDER}/${folder}/${slugify(value)}`;
 };
 
-const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || "kerygwxk";
 const ASSET_VERSION = import.meta.env.VITE_CLOUDINARY_ASSET_VERSION || "1";
+
+export const BASE_CLOTHING_IMAGES = {
+  Shirt: `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/f_auto,q_auto/StyleMate/custom-design/base/shirt`,
+  "T-Shirt": `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/f_auto,q_auto/StyleMate/custom-design/base/t-shirt`,
+  Kurti: `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/f_auto,q_auto/StyleMate/custom-design/base/kurti`,
+  Kurta: `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/f_auto,q_auto/StyleMate/custom-design/base/kurti`,
+  Gown: `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/f_auto,q_auto/StyleMate/custom-design/base/gown`,
+  Dress: `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/f_auto,q_auto/StyleMate/custom-design/base/dress`,
+};
+
+export const getClothingTypeImageUrl = (type = "Shirt") => {
+  const normalized = type || "Shirt";
+  return BASE_CLOTHING_IMAGES[normalized] || BASE_CLOTHING_IMAGES.Shirt;
+};
 
 export const buildLayerUrl = (publicId, { width = 800 } = {}) => {
   if (!publicId || !CLOUD_NAME) return null;
-  const cb = Date.now();
-  return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/f_auto,q_auto,c_limit,w_${width},fl_progressive/${publicId}.png?v=${ASSET_VERSION}&cb=${cb}`;
+  return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/f_auto,q_auto,c_limit,w_${width}/${publicId}`;
 };
 
 export const buildFinalImagePublicId = (selections = {}) => {
-  const type = slugify(selections.clothingType || "garment");
-  const parts = [];
-
-  if (selections.color) parts.push(slugify(selections.color));
-  if (selections.fabric) parts.push(slugify(selections.fabric));
-  if (selections.sleeveType && selections.sleeveType !== "Sleeveless") parts.push(slugify(selections.sleeveType));
-  if (selections.neckType) parts.push(slugify(selections.neckType));
-  if (selections.length) parts.push(slugify(selections.length));
-  if (selections.pattern && selections.pattern !== "Plain") parts.push(slugify(selections.pattern));
-  if (selections.embroidery && selections.embroidery !== "None") parts.push(slugify(selections.embroidery));
-  if (selections.threadWork && selections.threadWork !== "None") parts.push(slugify(selections.threadWork));
-  if (selections.stoneWork && selections.stoneWork !== "None") parts.push(slugify(selections.stoneWork));
-
-  const filename = parts.length > 0 ? parts.join("-") : "default";
-  return `StyleMate/custom-design/final/${type}/${filename}`;
+  const type = slugify(selections.clothingType || "shirt");
+  return `StyleMate/custom-design/base/${type}`;
 };
 
-export const buildFinalImageUrl = (publicId, { width = 1500 } = {}) => {
-  if (!publicId || !CLOUD_NAME) return null;
-  const cb = Date.now();
-  return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/f_auto,q_auto,c_limit,w_${width},fl_progressive/${publicId}.png?v=${ASSET_VERSION}&cb=${cb}`;
+export const buildFinalImageUrl = (publicId, { width = 1500, clothingType = "Shirt" } = {}) => {
+  if (publicId && !publicId.includes("custom-design/final")) {
+    return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/f_auto,q_auto,c_limit,w_${width}/${publicId}`;
+  }
+  return getClothingTypeImageUrl(clothingType);
 };

@@ -13,6 +13,7 @@ import PriceBreakdownPanel from "../components/priceBreakeDownPanel";
 import DesignStudioPanel from "../components/designStudioPanel";
 import FinishReviewModal from "../components/finishReviewModal";
 import { resolveSingleLayer } from "../components/mannequin/layerRegistry";
+import { getClothingTypeImageUrl } from "../utils/cloudinaryLayer";
 
 const QUIZ_STEPS = [
   { group: "gender", label: "Who is this outfit for?" },
@@ -66,7 +67,7 @@ const CustomizeWizardPage = () => {
     const result = await saveDesign({
       title: designTitle,
       previewImage: {
-        url: previewLayer?.src || "",
+        url: previewLayer?.src || getClothingTypeImageUrl(state.selections.clothingType),
         publicId: `${state.selections.clothingType || "design"}-preview`,
       },
       clothingType: state.selections.clothingType,

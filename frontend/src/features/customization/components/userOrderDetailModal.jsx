@@ -90,11 +90,10 @@ const UserOrderDetailModal = ({ order, onClose }) => {
                     return (
                       <div key={step} className="flex flex-col items-center min-w-[70px] text-center">
                         <div
-                          className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all mb-1 ${
-                            isCompleted
+                          className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all mb-1 ${isCompleted
                               ? "bg-[#4a5280] text-white shadow-sm"
                               : "bg-gray-100 text-gray-400 border border-gray-200"
-                          } ${isCurrent ? "ring-4 ring-[#4a5280]/20" : ""}`}
+                            } ${isCurrent ? "ring-4 ring-[#4a5280]/20" : ""}`}
                         >
                           {isCompleted ? <Check size={14} /> : idx + 1}
                         </div>

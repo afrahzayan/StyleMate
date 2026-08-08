@@ -309,6 +309,6 @@ export function getCombinationDetails(selections = {}) {
     threadWork: selections.threadWork || "None",
     stoneWork: selections.stoneWork || "None",
     description: dynamicDesc,
-    cloudinaryPath: `StyleMate/custom-design/final/${targetType.toLowerCase()}/custom-design.png`,
+    cloudinaryPath: `StyleMate/custom-design/base/${targetType.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
   };
 }

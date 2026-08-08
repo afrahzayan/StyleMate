@@ -11,28 +11,18 @@ import { getStatusBadgeClass } from "../../../shared/utils/orderStatusColors";
 import UserOrderDetailModal from "../components/userOrderDetailModal";
 import { connectSocket } from "../../../shared/socket/socket";
 import { getHexForOption } from "../components/questionnaire/optionStep";
-import { buildFinalImagePublicId, buildFinalImageUrl } from "../utils/cloudinaryLayer";
-
-const CLOTHING_TYPE_IMAGES = {
-  Shirt: "https://res.cloudinary.com/kerygwxk/image/upload/v1700000000/StyleMate/onboarding/clothing/shirt.png",
-  "T-Shirt": "https://res.cloudinary.com/kerygwxk/image/upload/v1700000000/StyleMate/onboarding/clothing/tshirt.png",
-  Kurta: "https://res.cloudinary.com/kerygwxk/image/upload/v1700000000/StyleMate/onboarding/clothing/kurta.png",
-  Kurti: "https://res.cloudinary.com/kerygwxk/image/upload/v1700000000/StyleMate/onboarding/clothing/kurti.png",
-  Gown: "https://res.cloudinary.com/kerygwxk/image/upload/v1700000000/StyleMate/onboarding/clothing/gown.png",
-  Dress: "https://res.cloudinary.com/kerygwxk/image/upload/v1700000000/StyleMate/onboarding/dress.png",
-};
+import { buildFinalImagePublicId, buildFinalImageUrl, getClothingTypeImageUrl } from "../utils/cloudinaryLayer";
 
 const getClothingImage = (item) => {
-  if (item?.previewImage?.url && !item.previewImage.url.includes("placeholder")) {
+  if (
+    item?.previewImage?.url &&
+    !item.previewImage.url.includes("placeholder") &&
+    !item.previewImage.url.includes("custom-design/final")
+  ) {
     return item.previewImage.url;
   }
-  if (item?.selections && Object.keys(item.selections).length > 0) {
-    const publicId = buildFinalImagePublicId(item.selections);
-    const cloudUrl = buildFinalImageUrl(publicId);
-    if (cloudUrl) return cloudUrl;
-  }
   const type = item?.clothingType || item?.selections?.clothingType || "Shirt";
-  return CLOTHING_TYPE_IMAGES[type] || CLOTHING_TYPE_IMAGES.Shirt;
+  return getClothingTypeImageUrl(type);
 };
 
 const MyDesignsPage = ({ view: initialView = "saved" }) => {
@@ -80,9 +70,9 @@ const MyDesignsPage = ({ view: initialView = "saved" }) => {
         currentOrders.map((order) =>
           order._id === data.orderId
             ? {
-                ...order,
-                orderStatus: data.status,
-              }
+              ...order,
+              orderStatus: data.status,
+            }
             : order
         )
       );
@@ -181,8 +171,8 @@ const MyDesignsPage = ({ view: initialView = "saved" }) => {
               {activeTab === "saved"
                 ? "Saved Custom Designs"
                 : activeTab === "orders"
-                ? "My Custom Orders"
-                : "Design History (Ordered)"}
+                  ? "My Custom Orders"
+                  : "Design History (Ordered)"}
             </h1>
           </div>
 
@@ -209,31 +199,28 @@ const MyDesignsPage = ({ view: initialView = "saved" }) => {
             <div className="flex gap-2">
               <button
                 onClick={() => setActiveTab("saved")}
-                className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all ${
-                  activeTab === "saved"
+                className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all ${activeTab === "saved"
                     ? "bg-[#4a5280] text-white shadow-sm"
                     : "bg-white text-gray-600 border border-gray-200 hover:border-gray-300"
-                }`}
+                  }`}
               >
                 Saved Designs
               </button>
               <button
                 onClick={() => setActiveTab("history")}
-                className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all ${
-                  activeTab === "history"
+                className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all ${activeTab === "history"
                     ? "bg-[#4a5280] text-white shadow-sm"
                     : "bg-white text-gray-600 border border-gray-200 hover:border-gray-300"
-                }`}
+                  }`}
               >
                 Design History
               </button>
               <button
                 onClick={() => setActiveTab("orders")}
-                className={`px-4 py-2 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition-all ${
-                  activeTab === "orders"
+                className={`px-4 py-2 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition-all ${activeTab === "orders"
                     ? "bg-[#4a5280] text-white shadow-sm"
                     : "bg-white text-gray-600 border border-gray-200 hover:border-gray-300"
-                }`}
+                  }`}
               >
                 <ShoppingBag size={14} />
                 My Orders
@@ -271,105 +258,77 @@ const MyDesignsPage = ({ view: initialView = "saved" }) => {
 
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 {designs.map((design) => (
-                  <div
+                  <DesignCardItem
                     key={design._id}
-                    className="bg-white rounded-2xl border overflow-hidden shadow-sm transition-all hover:shadow-md flex flex-col justify-between"
-                    style={{ borderColor: "#ede8e0" }}
-                  >
-                    <div className="aspect-[3/4] bg-gray-50 relative overflow-hidden group">
-                      <img
-                        src={getClothingImage(design)}
-                        alt={design.title}
-                        className="h-full w-full object-cover"
-                      />
-                      <span className="absolute top-3 right-3 rounded-full bg-white/90 backdrop-blur-sm px-2.5 py-0.5 text-[10px] font-bold uppercase text-gray-700 shadow-sm border border-gray-200">
-                        Saved Design
-                      </span>
-                    </div>
-
-                    <div className="p-4 space-y-3 flex-1">
-                      <div>
-                        <h3 className="truncate text-sm font-extrabold text-[#1c1c2e]">{design.title}</h3>
-                        <p className="text-xs font-bold text-[#4a5280] mt-0.5">Est. ₹{design.price}</p>
-                      </div>
-
-                      <div className="pt-2 text-xs space-y-1 text-gray-500 border-t" style={{ borderColor: "#ede8e0" }}>
-                        <div className="flex justify-between">
-                          <span>Clothing Type:</span>
-                          <span className="font-bold text-gray-800">{design.clothingType}</span>
-                        </div>
-                        {design.selections?.fabric && (
-                          <div className="flex justify-between">
-                            <span>Fabric:</span>
-                            <span className="font-semibold text-gray-700">{design.selections.fabric}</span>
-                          </div>
-                        )}
-                        {design.selections?.color && (
-                          <div className="flex justify-between">
-                            <span>Color:</span>
-                            <span className="font-semibold text-gray-700">{design.selections.color}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="p-3 bg-gray-50/50 border-t space-y-2" style={{ borderColor: "#ede8e0" }}>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => setSelectedSavedDesign(design)}
-                          className="flex-1 py-2 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-1 transition-all hover:opacity-90 shadow-sm"
-                          style={{ backgroundColor: "#2d3358" }}
-                        >
-                          <Eye size={13} />
-                          View Details
-                        </button>
-                        <button
-                          onClick={() => handleEditDesign(design)}
-                          className="px-3 py-2 rounded-xl text-xs font-bold text-[#4a5280] border border-[#4a5280]/20 bg-white hover:bg-gray-50 flex items-center justify-center gap-1 shadow-xs"
-                        >
-                          <Edit3 size={13} />
-                          Edit
-                        </button>
-                      </div>
-
-                      <div className="flex items-center justify-between gap-2 pt-1 border-t" style={{ borderColor: "#ede8e0" }}>
-                        <button
-                          onClick={() => downloadDesignSummary(design)}
-                          className="flex items-center gap-1 text-[11px] font-semibold text-gray-600 hover:text-gray-900"
-                        >
-                          <Download size={12} /> Summary
-                        </button>
-                        <button
-                          onClick={() => handleShare(design)}
-                          className="flex items-center gap-1 text-[11px] font-semibold text-gray-600 hover:text-gray-900"
-                        >
-                          <Share2 size={12} /> Share
-                        </button>
-                        <button
-                          onClick={() => handleDelete(design)}
-                          className="flex items-center gap-1 text-[11px] font-semibold text-rose-600 hover:underline ml-auto"
-                        >
-                          <Trash2 size={12} /> Delete
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+                    item={design}
+                    badgeText="Saved Design"
+                    onViewDetails={() => setSelectedSavedDesign(design)}
+                    onEdit={() => handleEditDesign(design)}
+                    onDownloadSummary={() => downloadDesignSummary(design)}
+                    onShare={() => handleShare(design)}
+                    onDelete={() => handleDelete(design)}
+                  />
                 ))}
               </div>
             </div>
           )}
 
-          {/* Design History & My Orders Views (Queries placed orders) */}
-          {(activeTab === "history" || activeTab === "orders") && (
+          {/* Design History Tab View (Uses Saved Designs card layout for placed orders) */}
+          {activeTab === "history" && (
+            <div>
+              {isOrdersLoading && <p className="text-xs text-gray-400">Loading your design history...</p>}
+
+              {!isOrdersLoading && orders.length === 0 && (
+                <div className="bg-white rounded-2xl p-12 text-center border" style={{ borderColor: "#ede8e0" }}>
+                  <p className="text-sm font-semibold text-gray-600 mb-4">
+                    No placed order history found. Customize and order a dress to add to your history!
+                  </p>
+                  <button
+                    onClick={() => navigate("/customize/new")}
+                    className="px-5 py-2.5 rounded-xl text-xs font-bold text-white shadow"
+                    style={{ backgroundColor: "#4a5280" }}
+                  >
+                    Customize & Order Now
+                  </button>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {orders.map((order) => (
+                  <DesignCardItem
+                    key={order._id}
+                    item={{
+                      ...order,
+                      title: order.title || `${order.clothingType || "Custom"} Design`,
+                      price: order.totalAmount || order.price || 799,
+                    }}
+                    badgeText="Ordered Design"
+                    onViewDetails={() =>
+                      setSelectedSavedDesign({
+                        ...order,
+                        title: order.title || `${order.clothingType || "Custom"} Design`,
+                        price: order.totalAmount || order.price || 799,
+                      })
+                    }
+                    onEdit={() => handleEditDesign(order)}
+                    onDownloadSummary={() => downloadDesignSummary(order)}
+                    onShare={() => handleShare(order)}
+                    onDelete={() => handleDeleteOrder(order._id)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* My Orders Tab View (Detailed Order tracking UI) */}
+          {activeTab === "orders" && (
             <div>
               {isOrdersLoading && <p className="text-xs text-gray-400">Loading your placed orders...</p>}
 
               {!isOrdersLoading && orders.length === 0 && (
                 <div className="bg-white rounded-2xl p-12 text-center border" style={{ borderColor: "#ede8e0" }}>
                   <p className="text-sm font-semibold text-gray-600 mb-4">
-                    {activeTab === "history"
-                      ? "No placed order history found. Customize and order a dress to add to your history!"
-                      : "You haven't placed any custom dress orders yet."}
+                    You haven't placed any custom dress orders yet.
                   </p>
                   <button
                     onClick={() => navigate("/customize/new")}
@@ -457,7 +416,7 @@ const MyDesignsPage = ({ view: initialView = "saved" }) => {
         </main>
       </div>
 
-      {/* Saved Design Details Modal */}
+      {/* Saved / History Design Details Modal */}
       {selectedSavedDesign && (
         <SavedDesignDetailsModal
           design={selectedSavedDesign}
@@ -481,11 +440,110 @@ const MyDesignsPage = ({ view: initialView = "saved" }) => {
   );
 };
 
-// Sub-component: Saved Design Details Modal
+// Sub-component: Reusable Design Card (used by both Saved Designs and Design History)
+const DesignCardItem = ({
+  item,
+  badgeText = "Saved Design",
+  onViewDetails,
+  onEdit,
+  onDownloadSummary,
+  onShare,
+  onDelete,
+}) => {
+  const displayPrice = item.price || item.totalAmount || 799;
+
+  return (
+    <div
+      className="bg-white rounded-2xl border overflow-hidden shadow-sm transition-all hover:shadow-md flex flex-col justify-between"
+      style={{ borderColor: "#ede8e0" }}
+    >
+      <div className="aspect-[3/4] bg-gray-50 relative overflow-hidden group">
+        <img
+          src={getClothingImage(item)}
+          alt={item.title}
+          className="h-full w-full object-cover"
+        />
+        <span className="absolute top-3 right-3 rounded-full bg-white/90 backdrop-blur-sm px-2.5 py-0.5 text-[10px] font-bold uppercase text-gray-700 shadow-sm border border-gray-200">
+          {badgeText}
+        </span>
+      </div>
+
+      <div className="p-4 space-y-3 flex-1">
+        <div>
+          <h3 className="truncate text-sm font-extrabold text-[#1c1c2e]">{item.title}</h3>
+          <p className="text-xs font-bold text-[#4a5280] mt-0.5">Est. ₹{displayPrice}</p>
+        </div>
+
+        <div className="pt-2 text-xs space-y-1 text-gray-500 border-t" style={{ borderColor: "#ede8e0" }}>
+          <div className="flex justify-between">
+            <span>Clothing Type:</span>
+            <span className="font-bold text-gray-800">{item.clothingType}</span>
+          </div>
+          {item.selections?.fabric && (
+            <div className="flex justify-between">
+              <span>Fabric:</span>
+              <span className="font-semibold text-gray-700">{item.selections.fabric}</span>
+            </div>
+          )}
+          {item.selections?.color && (
+            <div className="flex justify-between">
+              <span>Color:</span>
+              <span className="font-semibold text-gray-700">{item.selections.color}</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="p-3 bg-gray-50/50 border-t space-y-2" style={{ borderColor: "#ede8e0" }}>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onViewDetails}
+            className="flex-1 py-2 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-1 transition-all hover:opacity-90 shadow-sm"
+            style={{ backgroundColor: "#2d3358" }}
+          >
+            <Eye size={13} />
+            View Details
+          </button>
+          <button
+            onClick={onEdit}
+            className="px-3 py-2 rounded-xl text-xs font-bold text-[#4a5280] border border-[#4a5280]/20 bg-white hover:bg-gray-50 flex items-center justify-center gap-1 shadow-xs"
+          >
+            <Edit3 size={13} />
+            Edit
+          </button>
+        </div>
+
+        <div className="flex items-center justify-between gap-2 pt-1 border-t" style={{ borderColor: "#ede8e0" }}>
+          <button
+            onClick={onDownloadSummary}
+            className="flex items-center gap-1 text-[11px] font-semibold text-gray-600 hover:text-gray-900"
+          >
+            <Download size={12} /> Summary
+          </button>
+          <button
+            onClick={onShare}
+            className="flex items-center gap-1 text-[11px] font-semibold text-gray-600 hover:text-gray-900"
+          >
+            <Share2 size={12} /> Share
+          </button>
+          <button
+            onClick={onDelete}
+            className="flex items-center gap-1 text-[11px] font-semibold text-rose-600 hover:underline ml-auto"
+          >
+            <Trash2 size={12} /> Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Sub-component: Saved / History Design Details Modal
 const SavedDesignDetailsModal = ({ design, onClose, onEdit, onCheckout }) => {
   const selections = design?.selections || {};
   const colorHex = selections.color ? getHexForOption(selections.color) : null;
   const imageSrc = getClothingImage(design);
+  const isOrdered = Boolean(design.orderStatus || design.paymentStatus);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
@@ -494,7 +552,7 @@ const SavedDesignDetailsModal = ({ design, onClose, onEdit, onCheckout }) => {
         <div className="flex items-center justify-between px-6 py-4 bg-[#1c1c2e] text-white shrink-0">
           <div className="flex items-center gap-2">
             <Sparkles size={20} className="text-amber-400" />
-            <h2 className="text-lg font-extrabold tracking-wide">{design.title || "Saved Design Details"}</h2>
+            <h2 className="text-lg font-extrabold tracking-wide">{design.title || "Custom Design Details"}</h2>
           </div>
           <button
             onClick={onClose}
@@ -513,9 +571,9 @@ const SavedDesignDetailsModal = ({ design, onClose, onEdit, onCheckout }) => {
 
             <div className="flex-1 space-y-2 w-full">
               <h3 className="font-extrabold text-lg text-[#1c1c2e]">{design.clothingType}</h3>
-              <p className="text-xl font-black text-[#4a5280]">Est. Price: ₹{design.price}</p>
-              <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-xl text-xs text-amber-900 font-semibold">
-                Status: <span className="uppercase font-bold">Saved Design</span> (Not yet ordered)
+              <p className="text-xl font-black text-[#4a5280]">Est. Price: ₹{design.price || design.totalAmount}</p>
+              <div className={`p-3 border rounded-xl text-xs font-semibold ${isOrdered ? "bg-emerald-50/70 border-emerald-200 text-emerald-900" : "bg-amber-50/70 border-amber-200 text-amber-900"}`}>
+                Status: <span className="uppercase font-bold">{isOrdered ? "Ordered Design" : "Saved Design"}</span> {isOrdered ? "(Placed Order)" : "(Not yet ordered)"}
               </div>
             </div>
           </div>
@@ -559,7 +617,7 @@ const SavedDesignDetailsModal = ({ design, onClose, onEdit, onCheckout }) => {
               className="w-full sm:w-1/2 py-3 rounded-xl text-xs font-bold border border-[#4a5280] text-[#4a5280] bg-white hover:bg-gray-50 flex items-center justify-center gap-2 shadow-xs transition-colors"
             >
               <Edit3 size={15} />
-              Edit Design
+              {isOrdered ? "Re-customize Design" : "Edit Design"}
             </button>
 
             <button
